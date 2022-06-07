@@ -2,7 +2,8 @@ cmake_minimum_required(VERSION 3.10.2)
 project(TrainTicketSystem)
 set(CMAKE_CXX_STANDARD 17)
 # ------------------the following is to be modified------------------
-set(lib_dir_names main tools)
+set(lib_dir_names tools)
+set(program_names code test)
 
 # -------------------------------------------------------------------
 
@@ -28,7 +29,11 @@ foreach(lib_dir_name ${lib_dir_names})
   list(APPEND src_files ${tmp_files})
 endforeach()
 
-# generate src_files : a list of all the source file to be compiled
 message("${lib_dirs}")
 message("${src_files}")
-add_executable(code ${src_files})
+set(main_base_dir ${src_base_dir}/main)
+foreach(program_name ${program_names})
+  set(now_main_file ${main_base_dir}/${program_name}.cpp)
+  message("${program_name} ${now_main_file} ${src_files}")
+  add_executable(${program_name} ${now_main_file} ${src_files})
+endforeach()
