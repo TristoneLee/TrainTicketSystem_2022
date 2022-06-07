@@ -1,0 +1,117 @@
+#ifndef TRAINTICKETSYSTEM_2022_SRC_TOOLS_STR_H_
+#define TRAINTICKETSYSTEM_2022_SRC_TOOLS_STR_H_
+#include <cstring>
+#include <iostream>
+
+#include "const_value.h"
+using std::istream;
+using std::ostream;
+using std::string;
+namespace sjtu {
+#define STR_TEMPLATE template <int MaxLength>
+#define STR_CLASS Str<MaxLength>
+template <int MaxLength = kDefaultStrLength>
+class Str;
+STR_TEMPLATE
+bool operator<(const STR_CLASS& lhs, const STR_CLASS& rhs);
+STR_TEMPLATE
+bool operator>(const STR_CLASS& lhs, const STR_CLASS& rhs);
+STR_TEMPLATE
+bool operator<=(const STR_CLASS& lhs, const STR_CLASS& rhs);
+STR_TEMPLATE
+bool operator>=(const STR_CLASS& lhs, const STR_CLASS& rhs);
+STR_TEMPLATE
+bool operator==(const STR_CLASS& lhs, const STR_CLASS& rhs);
+STR_TEMPLATE
+bool operator!=(const STR_CLASS& lhs, const STR_CLASS& rhs);
+STR_TEMPLATE
+std::istream& operator>>(std::istream& lhs, STR_CLASS& rhs);
+STR_TEMPLATE
+std::ostream& operator<<(std::ostream& lhs, const STR_CLASS& rhs);
+STR_TEMPLATE
+class Str {
+ private:
+  char ctx[MaxLength];
+
+ public:
+  Str();
+  Str(const string& other);
+  Str(const Str& other);
+  int Length() const;
+  Str& operator=(const Str& other);
+  friend bool operator</**/<MaxLength>(const Str& lhs, const Str& rhs);
+  friend bool operator> /**/<MaxLength>(const Str& lhs, const Str& rhs);
+  friend bool operator<=<MaxLength>(const Str& lhs, const Str& rhs);
+  friend bool operator>=<MaxLength>(const Str& lhs, const Str& rhs);
+  friend bool operator==<MaxLength>(const Str& lhs, const Str& rhs);
+  friend bool operator!=<MaxLength>(const Str& lhs, const Str& rhs);
+  friend std::istream& operator>><MaxLength>(std::istream& lhs, Str& rhs);
+  friend std::ostream& operator<<<MaxLength>(std::ostream& lhs, const Str& rhs);
+  string ToString() const;
+  operator string();
+  char& operator[](int index);
+  const char& operator[](int index) const;
+  ~Str();
+};
+STR_TEMPLATE
+STR_CLASS::Str() { ctx[0] = '\0'; }
+STR_TEMPLATE
+STR_CLASS::Str(const string& other) { strcpy(ctx, other.c_str()); }
+STR_TEMPLATE
+int STR_CLASS::Length() const { return strlen(ctx); }
+STR_TEMPLATE
+string STR_CLASS::ToString() const { return ctx; }
+STR_TEMPLATE
+STR_CLASS& STR_CLASS::operator=(const Str& other) {
+  if (&other == this) return *this;
+  strcpy(ctx, other.ctx);
+  return *this;
+}
+STR_TEMPLATE
+bool operator<(const STR_CLASS& lhs, const STR_CLASS& rhs) {
+  return strcmp(lhs.ctx, rhs.ctx) < 0;
+}
+STR_TEMPLATE
+bool operator>(const STR_CLASS& lhs, const STR_CLASS& rhs) {
+  return strcmp(lhs.ctx, rhs.ctx) > 0;
+}
+STR_TEMPLATE
+bool operator<=(const STR_CLASS& lhs, const STR_CLASS& rhs) {
+  return strcmp(lhs.ctx, rhs.ctx) <= 0;
+}
+STR_TEMPLATE
+bool operator>=(const STR_CLASS& lhs, const STR_CLASS& rhs) {
+  return strcmp(lhs.ctx, rhs.ctx) >= 0;
+}
+STR_TEMPLATE
+bool operator==(const STR_CLASS& lhs, const STR_CLASS& rhs) {
+  return strcmp(lhs.ctx, rhs.ctx) == 0;
+}
+STR_TEMPLATE
+bool operator!=(const STR_CLASS& lhs, const STR_CLASS& rhs) {
+  return strcmp(lhs.ctx, rhs.ctx) != 0;
+}
+STR_TEMPLATE
+std::istream& operator>>(std::istream& lhs, STR_CLASS& rhs) {
+  string tmp;
+  lhs >> tmp;
+  rhs = tmp;
+  return lhs;
+}
+STR_TEMPLATE
+std::ostream& operator<<(std::ostream& lhs, const STR_CLASS& rhs) {
+  lhs << rhs.ToString();
+  return lhs;
+}
+STR_TEMPLATE
+STR_CLASS operator+(const STR_CLASS& lhs, const STR_CLASS& rhs) {
+  return lhs.ToString() + rhs.ToString();
+}
+STR_TEMPLATE
+char& STR_CLASS::operator[](int index) { return ctx[index]; }
+STR_TEMPLATE
+const char& STR_CLASS::operator[](int index) const { return ctx[index]; }
+STR_TEMPLATE
+STR_CLASS::~Str() = default;
+}  // namespace sjtu
+#endif  // TRAINTICKETSYSTEM_2022_SRC_TOOLS_STR_H_
