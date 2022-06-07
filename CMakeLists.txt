@@ -28,6 +28,7 @@ foreach(lib_dir_name ${lib_dir_names})
   file(GLOB_RECURSE tmp_files ${now_lib_dir}/*.cpp)
   list(APPEND src_files ${tmp_files})
 endforeach()
+include_directories("${lib_dirs}")
 
 message("${lib_dirs}")
 message("${src_files}")
