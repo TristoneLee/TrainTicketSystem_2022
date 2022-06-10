@@ -8,5 +8,5 @@ include_directories(.src)
 add_executable(Ticket_System
         src/MyString.h
         src/vector.h
-        src/test.cpp
+        test.cpp
         src/Database.h)
