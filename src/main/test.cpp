@@ -1,3 +1,9 @@
 #include <iostream>
+
 #include "str.hpp"
-int main() { std::cout << sjtu::Str(std::string("HelloWorld!")) << std::endl; }
+using std::cout;
+using std::endl;
+int main() {
+  sjtu::Str a = "Hello", b = "World";
+  std::cout << a + b << std::endl;
+}

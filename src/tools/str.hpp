@@ -29,14 +29,17 @@ std::istream& operator>>(std::istream& lhs, STR_CLASS& rhs);
 STR_TEMPLATE
 std::ostream& operator<<(std::ostream& lhs, const STR_CLASS& rhs);
 STR_TEMPLATE
+STR_CLASS operator+(const STR_CLASS& lhs, const STR_CLASS& rhs);
+STR_TEMPLATE
 class Str {
  private:
   char ctx[MaxLength];
 
  public:
   Str();
-  Str(const string& other);
   Str(const Str& other);
+  Str(const string& other);
+  Str(const char* other);
   int Length() const;
   Str& operator=(const Str& other);
   friend bool operator</**/<MaxLength>(const Str& lhs, const Str& rhs);
@@ -47,6 +50,7 @@ class Str {
   friend bool operator!=<MaxLength>(const Str& lhs, const Str& rhs);
   friend std::istream& operator>><MaxLength>(std::istream& lhs, Str& rhs);
   friend std::ostream& operator<<<MaxLength>(std::ostream& lhs, const Str& rhs);
+  friend Str operator+<MaxLength>(const Str& lhs, const Str& rhs);
   string ToString() const;
   operator string();
   char& operator[](int index);
@@ -56,7 +60,11 @@ class Str {
 STR_TEMPLATE
 STR_CLASS::Str() { ctx[0] = '\0'; }
 STR_TEMPLATE
+STR_CLASS::Str(const Str& other) { strcpy(ctx, other.ctx); }
+STR_TEMPLATE
 STR_CLASS::Str(const string& other) { strcpy(ctx, other.c_str()); }
+STR_TEMPLATE
+STR_CLASS::Str(const char* other) { strcpy(ctx, other); }
 STR_TEMPLATE
 int STR_CLASS::Length() const { return strlen(ctx); }
 STR_TEMPLATE
@@ -100,12 +108,14 @@ std::istream& operator>>(std::istream& lhs, STR_CLASS& rhs) {
 }
 STR_TEMPLATE
 std::ostream& operator<<(std::ostream& lhs, const STR_CLASS& rhs) {
-  lhs << rhs.ToString();
+  lhs << rhs.ctx;
   return lhs;
 }
 STR_TEMPLATE
 STR_CLASS operator+(const STR_CLASS& lhs, const STR_CLASS& rhs) {
-  return lhs.ToString() + rhs.ToString();
+  STR_CLASS ret(lhs);
+  strcpy(ret.ctx + ret.Length(), rhs.ctx);
+  return ret;
 }
 STR_TEMPLATE
 char& STR_CLASS::operator[](int index) { return ctx[index]; }
