@@ -9,5 +9,4 @@ add_executable(Ticket_System
         ./src/MyString.h
         ./src/vector.hpp
         src/test.cpp
-        src/Database.cpp
         src/Database.h)
