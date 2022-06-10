@@ -4,7 +4,7 @@
 #include <fstream>
 #include <iostream>
 #include <utility>
-#include "vector.hpp"
+#include "vector.h"
 
 using std::fstream;
 using std::lower_bound;
