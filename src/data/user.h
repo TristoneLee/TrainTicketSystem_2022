@@ -4,10 +4,10 @@
 namespace sjtu {
 class User {
  public:
-  StrType username;
-  StrType name;
-  StrType password;
-  StrType mail_addr;
+  UserName username;
+  Name name;
+  PassWord password;
+  MailAddr mail_addr;
   int privilege;
   User(const string& _user_name, const string& _name, const string& _password,
        const string& _mail_addr, int _privilege);
