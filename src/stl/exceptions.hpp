@@ -6,34 +6,38 @@
 #include <string>
 
 namespace sjtu {
+void Assert(bool condition) {
+  if (!condition) {
+    throw 1;
+  }
+}
 
 class exception {
-protected:
-	const std::string variant = "";
-	std::string detail = "";
-public:
-	exception() {}
-	exception(const exception &ec) : variant(ec.variant), detail(ec.detail) {}
-	virtual std::string what() {
-		return variant + " " + detail;
-	}
+ protected:
+  const std::string variant = "";
+  std::string detail = "";
+
+ public:
+  exception() {}
+  exception(const exception& ec) : variant(ec.variant), detail(ec.detail) {}
+  virtual std::string what() { return variant + " " + detail; }
 };
 
 class index_out_of_bound : public exception {
-	/* __________________________ */
+  /* __________________________ */
 };
 
 class runtime_error : public exception {
-	/* __________________________ */
+  /* __________________________ */
 };
 
 class invalid_iterator : public exception {
-	/* __________________________ */
+  /* __________________________ */
 };
 
 class container_is_empty : public exception {
-	/* __________________________ */
+  /* __________________________ */
 };
-}
+}  // namespace sjtu
 
 #endif
