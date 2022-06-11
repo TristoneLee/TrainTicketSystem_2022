@@ -10,8 +10,8 @@ using std::istringstream;
 using std::string;
 namespace sjtu {
 void Command::ScanCommand() {
-  if (buffer.empty()) return;
-  auto iter = buffer.begin(), ed_iter = buffer.end();
+  if (buffer_.empty()) return;
+  auto iter = buffer_.begin(), ed_iter = buffer_.end();
   char tmp_c;
   auto clear_space = [&]() -> void {
     while (iter != ed_iter && *iter == ' ') ++iter;
@@ -40,10 +40,10 @@ void Command::ScanCommand() {
   }
 }
 Command::Command(istream& input_stream) {
-  getline(input_stream, buffer);
+  getline(input_stream, buffer_);
   ScanCommand();
 }
-Command::Command(const string& str) : buffer(str) { ScanCommand(); }
+Command::Command(const string& str) : buffer_(str) { ScanCommand(); }
 Command::~Command() = default;
 };      // namespace sjtu
 #endif  // TRAINTICKETSYSTEM_2022_SRC_TOOLS_CMD_SCANNER_CPP

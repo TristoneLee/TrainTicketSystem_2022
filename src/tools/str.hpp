@@ -33,7 +33,7 @@ STR_CLASS operator+(const STR_CLASS& lhs, const STR_CLASS& rhs);
 STR_TEMPLATE
 class Str {
  private:
-  char ctx[MaxLength];
+  char ctx_[MaxLength];
 
  public:
   Str();
@@ -58,46 +58,46 @@ class Str {
   ~Str();
 };
 STR_TEMPLATE
-STR_CLASS::Str() { ctx[0] = '\0'; }
+STR_CLASS::Str() { ctx_[0] = '\0'; }
 STR_TEMPLATE
-STR_CLASS::Str(const Str& other) { strcpy(ctx, other.ctx); }
+STR_CLASS::Str(const Str& other) { strcpy(ctx_, other.ctx_); }
 STR_TEMPLATE
-STR_CLASS::Str(const string& other) { strcpy(ctx, other.c_str()); }
+STR_CLASS::Str(const string& other) { strcpy(ctx_, other.c_str()); }
 STR_TEMPLATE
-STR_CLASS::Str(const char* other) { strcpy(ctx, other); }
+STR_CLASS::Str(const char* other) { strcpy(ctx_, other); }
 STR_TEMPLATE
-int STR_CLASS::Length() const { return strlen(ctx); }
+int STR_CLASS::Length() const { return strlen(ctx_); }
 STR_TEMPLATE
-string STR_CLASS::ToString() const { return ctx; }
+string STR_CLASS::ToString() const { return ctx_; }
 STR_TEMPLATE
 STR_CLASS& STR_CLASS::operator=(const Str& other) {
   if (&other == this) return *this;
-  strcpy(ctx, other.ctx);
+  strcpy(ctx_, other.ctx_);
   return *this;
 }
 STR_TEMPLATE
 bool operator<(const STR_CLASS& lhs, const STR_CLASS& rhs) {
-  return strcmp(lhs.ctx, rhs.ctx) < 0;
+  return strcmp(lhs.ctx_, rhs.ctx_) < 0;
 }
 STR_TEMPLATE
 bool operator>(const STR_CLASS& lhs, const STR_CLASS& rhs) {
-  return strcmp(lhs.ctx, rhs.ctx) > 0;
+  return strcmp(lhs.ctx_, rhs.ctx_) > 0;
 }
 STR_TEMPLATE
 bool operator<=(const STR_CLASS& lhs, const STR_CLASS& rhs) {
-  return strcmp(lhs.ctx, rhs.ctx) <= 0;
+  return strcmp(lhs.ctx_, rhs.ctx_) <= 0;
 }
 STR_TEMPLATE
 bool operator>=(const STR_CLASS& lhs, const STR_CLASS& rhs) {
-  return strcmp(lhs.ctx, rhs.ctx) >= 0;
+  return strcmp(lhs.ctx_, rhs.ctx_) >= 0;
 }
 STR_TEMPLATE
 bool operator==(const STR_CLASS& lhs, const STR_CLASS& rhs) {
-  return strcmp(lhs.ctx, rhs.ctx) == 0;
+  return strcmp(lhs.ctx_, rhs.ctx_) == 0;
 }
 STR_TEMPLATE
 bool operator!=(const STR_CLASS& lhs, const STR_CLASS& rhs) {
-  return strcmp(lhs.ctx, rhs.ctx) != 0;
+  return strcmp(lhs.ctx_, rhs.ctx_) != 0;
 }
 STR_TEMPLATE
 std::istream& operator>>(std::istream& lhs, STR_CLASS& rhs) {
@@ -108,19 +108,19 @@ std::istream& operator>>(std::istream& lhs, STR_CLASS& rhs) {
 }
 STR_TEMPLATE
 std::ostream& operator<<(std::ostream& lhs, const STR_CLASS& rhs) {
-  lhs << rhs.ctx;
+  lhs << rhs.ctx_;
   return lhs;
 }
 STR_TEMPLATE
 STR_CLASS operator+(const STR_CLASS& lhs, const STR_CLASS& rhs) {
   STR_CLASS ret(lhs);
-  strcpy(ret.ctx + ret.Length(), rhs.ctx);
+  strcpy(ret.ctx_ + ret.Length(), rhs.ctx_);
   return ret;
 }
 STR_TEMPLATE
-char& STR_CLASS::operator[](int index) { return ctx[index]; }
+char& STR_CLASS::operator[](int index) { return ctx_[index]; }
 STR_TEMPLATE
-const char& STR_CLASS::operator[](int index) const { return ctx[index]; }
+const char& STR_CLASS::operator[](int index) const { return ctx_[index]; }
 STR_TEMPLATE
 STR_CLASS::~Str() = default;
 }  // namespace sjtu

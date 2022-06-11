@@ -8,8 +8,9 @@ using std::string;
 namespace sjtu {
 class Command {
  private:
-  string buffer;
+  string buffer_;
   void ScanCommand();
+
  public:
   string op;
   map<char, string> args;
