@@ -12,7 +12,6 @@ namespace sjtu {
 #define STR_CLASS Str<MaxLength>
 template <int MaxLength = kDefaultStrLength>
 class Str;
-using StrType = Str<>;
 STR_TEMPLATE
 bool operator<(const STR_CLASS& lhs, const STR_CLASS& rhs);
 STR_TEMPLATE
@@ -34,7 +33,7 @@ STR_CLASS operator+(const STR_CLASS& lhs, const STR_CLASS& rhs);
 STR_TEMPLATE
 class Str {
  private:
-  char ctx_[MaxLength];
+  char ctx_[MaxLength + 1];  // +1 for '\0'
 
  public:
   Str();
@@ -124,5 +123,11 @@ STR_TEMPLATE
 const char& STR_CLASS::operator[](int index) const { return ctx_[index]; }
 STR_TEMPLATE
 STR_CLASS::~Str() = default;
+using UserName = Str<kUserNameLength>;
+using PassWord = Str<kPassWordLength>;
+using Name = Str<kNameLength>;
+using MailAddr = Str<kMailAddrLength>;
+using TrainID = Str<kTrainIDLength>;
+using Station = Str<kStationLength>;
 }  // namespace sjtu
 #endif  // TRAINTICKETSYSTEM_2022_SRC_TOOLS_STR_H_
