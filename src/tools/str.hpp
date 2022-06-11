@@ -12,6 +12,7 @@ namespace sjtu {
 #define STR_CLASS Str<MaxLength>
 template <int MaxLength = kDefaultStrLength>
 class Str;
+using StrType = Str<>;
 STR_TEMPLATE
 bool operator<(const STR_CLASS& lhs, const STR_CLASS& rhs);
 STR_TEMPLATE
