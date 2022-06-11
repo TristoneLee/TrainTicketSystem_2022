@@ -1,5 +1,5 @@
 #ifndef TRAINTICKETSYSTEM_2022_SRC_TOOLS_CONST_VALUE_H
 #define TRAINTICKETSYSTEM_2022_SRC_TOOLS_CONST_VALUE_H
 // reference : http://c.biancheng.net/view/7644.html
-const int kDefaultStrLength = 100;
+const int kDefaultStrLength = 40;
 #endif  // TRAINTICKETSYSTEM_2022_SRC_TOOLS_CONST_VALUE_H
