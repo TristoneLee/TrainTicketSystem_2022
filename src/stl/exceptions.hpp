@@ -6,11 +6,6 @@
 #include <string>
 
 namespace sjtu {
-void Assert(bool condition) {
-  if (!condition) {
-    throw 1;
-  }
-}
 
 class exception {
  protected:

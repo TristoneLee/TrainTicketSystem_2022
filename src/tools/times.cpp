@@ -2,7 +2,7 @@
 #define TRAINTICKETSYSTEM_2022_SRC_TOOLS_TIMES_CPP
 #include <times.h>
 
-#include <exceptions.hpp>
+#include <asserts.h>
 #include <iostream>
 using std::string;
 namespace sjtu {
