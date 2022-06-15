@@ -3,9 +3,9 @@
 
 #include "asserts.h"
 namespace sjtu {
-void Assert(bool condition) {
+void Assert(bool condition, const char* msg) {
   if (!condition) {
-    throw 1;
+    throw msg;
   }
 }
 }  // namespace sjtu
