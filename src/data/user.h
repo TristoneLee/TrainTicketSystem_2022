@@ -9,8 +9,10 @@ class User {
   PassWord password;
   MailAddr mail_addr;
   int privilege;
-  User(const string& _user_name, const string& _name, const string& _password,
-       const string& _mail_addr, int _privilege);
+  User();
+  User(const string& _user_name, const string& _name, const string& _password, const string& _mail_addr,
+       int _privilege);
+  User& operator=(const User& other);
   ~User();
 };
 };      // namespace sjtu
