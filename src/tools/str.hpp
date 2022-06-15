@@ -1,5 +1,5 @@
-#ifndef TRAINTICKETSYSTEM_2022_SRC_TOOLS_STR_H_
-#define TRAINTICKETSYSTEM_2022_SRC_TOOLS_STR_H_
+#ifndef TRAINTICKETSYSTEM_2022_SRC_TOOLS_STR_HPP
+#define TRAINTICKETSYSTEM_2022_SRC_TOOLS_STR_HPP
 #include <cstring>
 #include <iostream>
 
@@ -130,4 +130,4 @@ using MailAddr = Str<kMailAddrLength>;
 using TrainID = Str<kTrainIDLength>;
 using Station = Str<kStationLength>;
 }  // namespace sjtu
-#endif  // TRAINTICKETSYSTEM_2022_SRC_TOOLS_STR_H_
+#endif  // TRAINTICKETSYSTEM_2022_SRC_TOOLS_STR_HPP
