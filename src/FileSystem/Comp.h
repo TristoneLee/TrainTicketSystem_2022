@@ -5,30 +5,36 @@ using std::pair;
 namespace Comp {
 template <class ValueType>
 class SingleComp {
-	public:
+ public:
   int operator()(const ValueType& lhs, const ValueType& rhs);
 };
 template <class KeyValueFirst, class KeyValueSecond>
 class PairCompFirst {
-	public:
+ public:
   int operator()(const pair<KeyValueFirst, KeyValueSecond>& lhs,
                  const pair<KeyValueFirst, KeyValueSecond>& rhs);
 };
 template <class Compare, class ValueType>
 class CompToLess {
-	public:
+ public:
   bool operator()(const ValueType& lhs, const ValueType& rhs);
 };
 template <class Compare, class ValueType>
 class LessToComp {
-	public:
+ public:
   bool operator()(const ValueType& lhs, const ValueType& rhs);
 };
-template<class ValueType>
+template <class ValueType>
 
 class GetSelf {
-	public:
+ public:
   ValueType operator()(const ValueType& obj);
+};
+
+template <class ValueType>
+class BailanHash {
+ public:
+  int operator()(const ValueType& obj);
 };
 }  // namespace Comp
 #include "Comp.inl"

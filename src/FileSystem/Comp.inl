@@ -34,4 +34,9 @@ template <class ValueType>
 ValueType Comp::GetSelf<ValueType>::operator()(const ValueType& obj) {
   return obj;
 }
+
+template <class ValueType>
+int Comp::BailanHash<ValueType>::operator()(const ValueType& obj) {
+  return 0;
+}
 #endif  // BOOKSTORE_SRC_FILESYSTEM_COMP_INL

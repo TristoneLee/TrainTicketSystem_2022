@@ -14,8 +14,8 @@ using std::string;
 using std::vector;
 
 #include "Comp.h"
-template <class KeyType, class ValueType, class ValueIndexType = ValueType,
-          class HashFunc = Comp::GetSelf<ValueType>,
+template <class KeyType, class ValueType, class ValueIndexType = int,
+          class HashFunc = Comp::BailanHash<ValueType>,
           class IndexCompare =
               Comp::CompToLess<Comp::PairCompFirst<KeyType, ValueIndexType>,
                                pair<KeyType, ValueIndexType>>,
