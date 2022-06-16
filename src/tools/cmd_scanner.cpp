@@ -5,6 +5,7 @@
 #include <iostream>
 
 #include "map.hpp"
+#include "split.h"
 using std::istream;
 using std::istringstream;
 using std::string;
@@ -23,6 +24,12 @@ void Command::ScanCommand() {
       ++iter;
     }
   };
+  clear_space();
+  string tmp_str;
+  get_token(tmp_str);
+  tmp_str.erase(0, 1);
+  tmp_str.pop_back();
+  timestamp = ToInt(tmp_str);
   clear_space();
   get_token(op);
   clear_space();

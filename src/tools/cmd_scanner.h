@@ -12,6 +12,7 @@ class Command {
   void ScanCommand();
 
  public:
+  int timestamp;
   string op;
   map<char, string> args;
   Command(istream& input_stream);
