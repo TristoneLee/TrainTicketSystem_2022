@@ -1,6 +1,6 @@
-#ifndef TRAINTICKETSYSTEM_2022_SRC_SYSTEMS_TICKET_SYSTEM_CPP
-#define TRAINTICKETSYSTEM_2022_SRC_SYSTEMS_TICKET_SYSTEM_CPP
-#include "ticket_system.h"
+#ifndef TRAINTICKETSYSTEM_2022_SRC_SYSTEMS_TRAIN_TICKET_SYSTEM_CPP
+#define TRAINTICKETSYSTEM_2022_SRC_SYSTEMS_TRAIN_TICKET_SYSTEM_CPP
+#include "train_ticket_system.h"
 
 #include <iostream>
 using std::cerr;
@@ -12,13 +12,13 @@ using std::endl;
 #include "split.h"
 
 namespace sjtu {
-void TicketSystem::JudgeOnline(const Command& cmd) {
+void TrainTicketSystem::JudgeOnline(const Command& cmd) {
   if (cmd.op == "query_profile" || cmd.op == "modify_profile")
     Assert(user_system.IsOnline(cmd.args['c']), "user is not online");
   if (cmd.op == "buy_ticket" || cmd.op == "query_order" || cmd.op == "refund_ticket")
     Assert(user_system.IsOnline(cmd.args['u']), "user is not online");
 }
-bool TicketSystem::CheckFirst() {
+bool TrainTicketSystem::CheckFirst() {
   fstream temp_file(".isfirst", fstream::in | fstream::out | fstream::binary);
   if (!temp_file) {
     // create file
@@ -29,11 +29,11 @@ bool TicketSystem::CheckFirst() {
   temp_file.close();
   return false;
 }
-TicketSystem::TicketSystem() {}
-void TicketSystem::Work() {
+TrainTicketSystem::TrainTicketSystem() {}
+void TrainTicketSystem::Work() {
   while (true) {
     try {
-      // judge privilege inside the TicketSystem
+      // judge privilege inside the TrainTicketSystem
       // judge other availablity outsides
       Command now_cmd(std::cin);
       cout << '[' << now_cmd.timestamp << ']' << ' ';
@@ -140,6 +140,6 @@ void TicketSystem::Work() {
     // cout << endl;
   }
 }
-TicketSystem::~TicketSystem() = default;
+TrainTicketSystem::~TrainTicketSystem() = default;
 }  // namespace sjtu
-#endif  // TRAINTICKETSYSTEM_2022_SRC_SYSTEMS_TICKET_SYSTEM_CPP
+#endif  // TRAINTICKETSYSTEM_2022_SRC_SYSTEMS_TRAIN_TICKET_SYSTEM_CPP
