@@ -52,7 +52,7 @@ class Str {
   friend std::ostream& operator<<<MaxLength>(std::ostream& lhs, const Str& rhs);
   friend Str operator+<MaxLength>(const Str& lhs, const Str& rhs);
   string ToString() const;
-  operator string();
+  operator string() const;
   char& operator[](int index);
   const char& operator[](int index) const;
   ~Str();
@@ -70,35 +70,25 @@ int STR_CLASS::Length() const { return strlen(ctx_); }
 STR_TEMPLATE
 string STR_CLASS::ToString() const { return ctx_; }
 STR_TEMPLATE
+STR_CLASS::operator string() const { return ctx_; }
+STR_TEMPLATE
 STR_CLASS& STR_CLASS::operator=(const Str& other) {
   if (&other == this) return *this;
   strcpy(ctx_, other.ctx_);
   return *this;
 }
 STR_TEMPLATE
-bool operator<(const STR_CLASS& lhs, const STR_CLASS& rhs) {
-  return strcmp(lhs.ctx_, rhs.ctx_) < 0;
-}
+bool operator<(const STR_CLASS& lhs, const STR_CLASS& rhs) { return strcmp(lhs.ctx_, rhs.ctx_) < 0; }
 STR_TEMPLATE
-bool operator>(const STR_CLASS& lhs, const STR_CLASS& rhs) {
-  return strcmp(lhs.ctx_, rhs.ctx_) > 0;
-}
+bool operator>(const STR_CLASS& lhs, const STR_CLASS& rhs) { return strcmp(lhs.ctx_, rhs.ctx_) > 0; }
 STR_TEMPLATE
-bool operator<=(const STR_CLASS& lhs, const STR_CLASS& rhs) {
-  return strcmp(lhs.ctx_, rhs.ctx_) <= 0;
-}
+bool operator<=(const STR_CLASS& lhs, const STR_CLASS& rhs) { return strcmp(lhs.ctx_, rhs.ctx_) <= 0; }
 STR_TEMPLATE
-bool operator>=(const STR_CLASS& lhs, const STR_CLASS& rhs) {
-  return strcmp(lhs.ctx_, rhs.ctx_) >= 0;
-}
+bool operator>=(const STR_CLASS& lhs, const STR_CLASS& rhs) { return strcmp(lhs.ctx_, rhs.ctx_) >= 0; }
 STR_TEMPLATE
-bool operator==(const STR_CLASS& lhs, const STR_CLASS& rhs) {
-  return strcmp(lhs.ctx_, rhs.ctx_) == 0;
-}
+bool operator==(const STR_CLASS& lhs, const STR_CLASS& rhs) { return strcmp(lhs.ctx_, rhs.ctx_) == 0; }
 STR_TEMPLATE
-bool operator!=(const STR_CLASS& lhs, const STR_CLASS& rhs) {
-  return strcmp(lhs.ctx_, rhs.ctx_) != 0;
-}
+bool operator!=(const STR_CLASS& lhs, const STR_CLASS& rhs) { return strcmp(lhs.ctx_, rhs.ctx_) != 0; }
 STR_TEMPLATE
 std::istream& operator>>(std::istream& lhs, STR_CLASS& rhs) {
   string tmp;
