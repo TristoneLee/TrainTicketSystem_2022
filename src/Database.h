@@ -5,10 +5,10 @@
 #include <iostream>
 #include <utility>
 #include "vector.h"
+#include <vector>
+#include "MyString.h"
 
 using std::fstream;
-using std::lower_bound;
-using sjtu::vector;
 using std::cout;
 using std::cin;
 
@@ -83,52 +83,79 @@ namespace sjtu {
         int countOf() { return count; }
     };
 
-
-    template<class Key, class T, class Compare=std::less<Key>>
+    template<class Key,
+            class Value,
+            class HashType,
+            class HashFunc,
+            class KeyCompare=std::less<Key>,
+            class HashCompare=std::less<HashType>>
     class bpTree {
-        friend class Pair;
+        friend class indexPair;
+
+        friend class iterator;
 
     public:
-        class Pair {
-        protected:
+        class storagePair {
+            friend class bpTree;
+
+        private:
             Key key;
-            T value;
-
+            Value value;
         public:
-            Pair() = default;
+            storagePair() = default;
 
-            Pair(const Key _key, const T &_value) : key(_key), value(_value) {};
+            storagePair(const Key &_key, const Value &_value) : key(_key), value(_value) {};
 
             Key keyOf() const { return key; }
 
-            T valueOf() const { return value; }
+            Value valueOf() const { return value; }
+        };
 
-            bool operator==(const Pair &rhs) const {
-                if (compare(key, rhs.key) || compare(rhs.key, key)) return false;
-                else return value == rhs.value;
+        class indexPair {
+            friend class bpTree;
+
+        protected:
+            Key key;
+            HashType value;
+            int pos;
+
+        public:
+            indexPair() = default;
+
+            indexPair(const Key _key, const HashType &_value, int _pos) : key(_key), value(_value), pos(_pos) {};
+
+            Key keyOf() const { return key; }
+
+            HashType valueOf() const { return value; }
+
+            int posOf() const { return pos; }
+
+            bool operator==(const indexPair &rhs) const {
+                if (keyCompare(key, rhs.key) || keyCompare(rhs.key, key)) return false;
+                else return !(hashCompare(value, rhs.value) || hashCompare(rhs.value, value));
             }
 
-            bool operator!=(const Pair &rhs) const {
+            bool operator!=(const indexPair &rhs) const {
                 return !(*this == rhs);
             }
 
-            bool operator<(const Pair &rhs) const {
-                if (compare(key, rhs.key))return true;
-                else if (compare(rhs.key, key)) return false;
-                else return value < rhs.value;
+            bool operator<(const indexPair &rhs) const {
+                if (keyCompare(key, rhs.key))return true;
+                else if (keyCompare(rhs.key, key)) return false;
+                else return hashCompare(value, rhs.value);
             }
 
-            bool operator>(const Pair &rhs) const {
-                if (compare(key, rhs.key))return false;
-                else if (compare(rhs.key, key)) return true;
-                else return value > rhs.value;
+            bool operator>(const indexPair &rhs) const {
+                if (keyCompare(key, rhs.key))return false;
+                else if (keyCompare(rhs.key, key)) return true;
+                else return hashCompare(rhs.value, value);
             }
 
-            bool operator<=(const Pair &rhs) const {
+            bool operator<=(const indexPair &rhs) const {
                 return !(*this > rhs);
             }
 
-            bool operator>=(const Pair &rhs) const {
+            bool operator>=(const indexPair &rhs) const {
                 return !(*this < rhs);
             }
         };
@@ -149,7 +176,7 @@ namespace sjtu {
             int nodeSiz; //节点内key数量
             int parent; //父节点地址
             int loc; //在document中的地址
-            Pair indexes[MAX_KEY];
+            indexPair indexes[MAX_KEY];
             int children[MAX_CHILD]{};
 
             bpNode();
@@ -157,27 +184,77 @@ namespace sjtu {
         };
 
         class array {
-            friend class bpTree<Key, T, Compare>;
+            friend class bpTree;
 
         private:
             int arraySiz;
-            Pair data[MAX_DATA];
+            indexPair data[MAX_DATA];
             int next;
 
             array();
 
-            array(Pair, int);
+            array(indexPair, int);
 
+        };
+
+        class iterator {
+            friend class bpTree;
+
+        private:
+            int pos;
+            int num;
+            int next;
+            int arraySiz;
+            bpTree *master;
+
+        public:
+            iterator(int _next, int _pos, int _num, int _arraySiz, bpTree *_master) : next(_next), pos(_pos),
+                                                                                      arraySiz(_arraySiz),
+                                                                                      master(_master), num(_num) {};
+
+            iterator &operator++() {
+                ++num;
+                if (num == arraySiz) {
+                    if (next == 0) {
+                        num = -1;
+                        return *this;
+                    }
+                    array tem;
+                    master->arrayDocument.read(tem, next);
+                    num = 0;
+                    pos = next;
+                    next = tem.next;
+                    arraySiz = tem.arraySiz;
+                    return *this;
+                }
+                return *this;
+            }
+
+            bool ifEnd() {
+                return num == -1;
+            }
+
+            storagePair operator*() {
+                array tem;
+                master->arrayDocument.read(tem, pos);
+                storagePair pair;
+                master->storageDocument.read(pair, tem.data[num].pos);
+                return pair;
+            }
         };
 
         bpNode root;
         iofile<array> arrayDocument;
         iofile<bpNode> nodeDocument;
+        iofile<storagePair> storageDocument;
         fstream basicData;
         int siz;
         int head;
         int locOfRoot;
-        static Compare compare;
+        static KeyCompare keyCompare;
+        static HashCompare hashCompare;
+        static HashFunc hashFunc;
+        std::string filename;
 
 
         void arraySplit(bpNode &curNode, array &curArray, int &posInNode);
@@ -192,52 +269,68 @@ namespace sjtu {
 
         void nodeAdoption(bpNode &curNode);
 
-        void indexUpdate(bpNode curNode, const Pair &indexToUpdate);
+        void indexUpdate(bpNode curNode, const indexPair &indexToUpdate);
 
         int binarySearch(const int *a, int l, int r, const int &obj);
 
-        int binarySearch(const Pair *a, int l, int r, const Pair &obj);
+        int noOrderSearch(const int *a, int l, int r, const int &obj);
 
-        int binarySearch(const Pair *a, int l, int r, const Key &obj);
+        int binarySearch(const indexPair *a, int l, int r, const indexPair &obj);
 
-        int keySearch(const Pair *a, int l, int r, const Key &obj);
+        int binarySearch(const indexPair *a, int l, int r, const Key &obj);
 
-        int keySearch(const Pair *a, int l, int r, const Pair &obj);
+        int keySearch(const indexPair *a, int l, int r, const Key &obj);
+
+        int keySearch(const indexPair *a, int l, int r, const indexPair &obj);
 
 
     public:
-        bpTree();
+        bpTree(std::string name);
 
         ~bpTree();
 
-        sjtu::vector<T> query(Key key);
+        std::vector<Value> query(Key key);
 
-        bool insert(Pair obj);
+        bool insert(Key key, Value value);
 
-        bool erase(Pair obj);
+        bool erase(Key key, Value value);
 
         int size();
 
         void clear();
 
+        void valueUpdate(iterator iter, Value newValue);
+
+        iterator find(Key key);
+
+        iterator begin();
+
     };
 
-    template<class Key, class T, class Compare>
-    Compare bpTree<Key, T, Compare>::compare = Compare();
+    template<class Key, class Value, class HashType, class HashFunc, class KeyCompare, class HashCompare>
+    KeyCompare bpTree<Key, Value, HashType, HashFunc, KeyCompare, HashCompare>::keyCompare = KeyCompare();
 
-    template<class Key, class T, class Compare>
-    bpTree<Key, T, Compare>::bpNode::bpNode() {
+    template<class Key, class Value, class HashType, class HashFunc, class KeyCompare, class HashCompare>
+    HashCompare bpTree<Key, Value, HashType, HashFunc, KeyCompare, HashCompare>::hashCompare = HashCompare();
+
+    template<class Key, class Value, class HashType, class HashFunc, class KeyCompare, class HashCompare>
+    HashFunc bpTree<Key, Value, HashType, HashFunc, KeyCompare, HashCompare>::hashFunc = HashFunc();
+
+    template<class Key, class Value, class HashType, class HashFunc, class KeyCompare, class HashCompare>
+    bpTree<Key, Value, HashType, HashFunc, KeyCompare, HashCompare>::bpNode::bpNode() {
         isLeaf = true;
         nodeSiz = 0;
         parent = 0;
         memset(children, 0, sizeof(children));
         loc = 0;
-        for (auto &index: indexes) index = Pair();
+        for (auto &index: indexes) index = indexPair();
     }
 
-    template<class Key, class T, class Compare>
-    bpTree<Key, T, Compare>::bpTree():root(), nodeDocument("nodeDocument"), arrayDocument("arrayDocument") {
-        basicData.open("basicData");
+    template<class Key, class Value, class HashType, class HashFunc, class KeyCompare, class HashCompare>
+    bpTree<Key, Value, HashType, HashFunc, KeyCompare, HashCompare>::bpTree(std::string name)
+            :root(), nodeDocument(name + "nodeDocument"), arrayDocument(name + "arrayDocument"),
+             storageDocument(name + "storageDocument") {
+        basicData.open(name + "basicData");
         if (basicData) {
             basicData.seekg(0);
             basicData.read(reinterpret_cast<char *>(&siz), sizeof(int));
@@ -249,7 +342,7 @@ namespace sjtu {
             nodeDocument.read(root, locOfRoot);
         } else {
             basicData.clear();
-            basicData.open("basicData", fstream::out);
+            basicData.open(name + "basicData", fstream::out);
             basicData.close();
             siz = 0;
             head = 0;
@@ -258,10 +351,10 @@ namespace sjtu {
         }
     }
 
-    template<class Key, class T, class Compare>
-    bpTree<Key, T, Compare>::~bpTree() {
+    template<class Key, class Value, class HashType, class HashFunc, class KeyCompare, class HashCompare>
+    bpTree<Key, Value, HashType, HashFunc, KeyCompare, HashCompare>::~bpTree() {
         locOfRoot = root.loc;
-        basicData.open("basicData");
+        basicData.open(filename + "basicData");
         basicData.seekp(0);
         basicData.write(reinterpret_cast<char *>(&siz), sizeof(int));
         basicData.seekp(sizeof(int));
@@ -272,9 +365,14 @@ namespace sjtu {
         nodeDocument.update(root, root.loc);
     }
 
-    template<class Key, class T, class Compare>
-    bool bpTree<Key, T, Compare>::insert(Pair obj) {
+    template<class Key, class Value, class HashType, class HashFunc, class KeyCompare, class HashCompare>
+    bool bpTree<Key, Value, HashType, HashFunc, KeyCompare, HashCompare>::insert(Key key, Value value) {
+        HashType valueHash = hashFunc(value);
+        indexPair obj(key, valueHash, 0);
         if (siz == 0) {
+            storagePair pair(key, value);
+            int valuePos = storageDocument.write(pair);
+            obj.pos = valuePos;
             array tem(obj, 0);
             head = root.children[0] = arrayDocument.write(tem);
             ++siz;
@@ -290,8 +388,11 @@ namespace sjtu {
         arrayDocument.read(curArray, curNode.children[posInNode]);
         int posInArray = binarySearch(curArray.data, 0, curArray.arraySiz, obj);
         if (curArray.data[posInArray] == obj) return false;
+        storagePair pair(key, value);
+        int valuePos = storageDocument.write(pair);
+        obj.pos = valuePos;
         if (posInArray == 0 && posInNode != 0) curNode.indexes[posInNode - 1] = obj;
-        else if (posInNode == 0 && posInArray == 0) indexUpdate(curNode, obj);
+        else if (posInNode == 0 && posInArray == 0 && curNode.loc != root.loc) indexUpdate(curNode, obj);
         for (int i = curArray.arraySiz; i > posInArray; --i) curArray.data[i] = curArray.data[i - 1];
         curArray.data[posInArray] = obj;
         ++curArray.arraySiz;
@@ -303,8 +404,10 @@ namespace sjtu {
         return true;
     }
 
-    template<class Key, class T, class Compare>
-    bool bpTree<Key, T, Compare>::erase(Pair obj) {
+    template<class Key, class Value, class HashType, class HashFunc, class KeyCompare, class HashCompare>
+    bool bpTree<Key, Value, HashType, HashFunc, KeyCompare, HashCompare>::erase(Key key, Value value) {
+        HashType valueHash = hashFunc(value);
+        indexPair obj(key, valueHash, 0);
         if (siz == 0) return false;
         bpNode curNode = root;
         while (!curNode.isLeaf) {
@@ -316,6 +419,7 @@ namespace sjtu {
         arrayDocument.read(curArray, curNode.children[posInNode]);
         int posInArray = binarySearch(curArray.data, 0, curArray.arraySiz, obj);
         if (curArray.data[posInArray] != obj) return false;
+        storageDocument.Delete(curArray.data[posInArray].pos);
         for (int i = posInArray; i <= curArray.arraySiz - 2; ++i) curArray.data[i] = curArray.data[i + 1];
         if (posInArray == 0 && posInNode != 0) curNode.indexes[posInNode - 1] = curArray.data[0];
         else if (posInNode == 0 && posInArray == 0)indexUpdate(curNode, curArray.data[0]);
@@ -328,14 +432,15 @@ namespace sjtu {
         return true;
     }
 
-    template<class Key, class T, class Compare>
-    int bpTree<Key, T, Compare>::size() { return siz; };
+    template<class Key, class Value, class HashType, class HashFunc, class KeyCompare, class HashCompare>
+    int bpTree<Key, Value, HashType, HashFunc, KeyCompare, HashCompare>::size() { return siz; };
 
-    template<class Key, class T, class Compare>
-    void bpTree<Key, T, Compare>::clear() {}
+    template<class Key, class Value, class HashType, class HashFunc, class KeyCompare, class HashCompare>
+    void bpTree<Key, Value, HashType, HashFunc, KeyCompare, HashCompare>::clear() {}
 
-    template<class Key, class T, class Compare>
-    void bpTree<Key, T, Compare>::arraySplit(bpNode &curNode, array &curArray, int &posInNode) {
+    template<class Key, class Value, class HashType, class HashFunc, class KeyCompare, class HashCompare>
+    void bpTree<Key, Value, HashType, HashFunc, KeyCompare, HashCompare>::arraySplit(bpNode &curNode, array &curArray,
+                                                                                     int &posInNode) {
         array newArray;
         for (int i = MIN_DATA; i < MAX_DATA; ++i) {
             newArray.data[i - MIN_DATA] = curArray.data[i];
@@ -354,8 +459,8 @@ namespace sjtu {
         if (curNode.nodeSiz == MAX_KEY) nodeSplit(curNode);
     }
 
-    template<class Key, class T, class Compare>
-    void bpTree<Key, T, Compare>::nodeSplit(bpNode &curNode) {
+    template<class Key, class Value, class HashType, class HashFunc, class KeyCompare, class HashCompare>
+    void bpTree<Key, Value, HashType, HashFunc, KeyCompare, HashCompare>::nodeSplit(bpNode &curNode) {
         if (curNode.loc == root.loc) {
             bpNode newNode;
             newNode.isLeaf = curNode.isLeaf = true;
@@ -386,7 +491,7 @@ namespace sjtu {
                 curNode.nodeSiz = MIN_KEY;
                 for (int i = 0; i < MIN_KEY; ++i) newNode.indexes[i] = curNode.indexes[i + MIN_KEY + 1];
                 for (int i = 0; i < MIN_CHILD; ++i) newNode.children[i] = curNode.children[i + MIN_CHILD];
-                int pos = binarySearch(faNode.children, 0, faNode.nodeSiz + 1, curNode.loc);
+                int pos = noOrderSearch(faNode.children, 0, faNode.nodeSiz, curNode.loc);
                 for (int i = faNode.nodeSiz + 1; i > pos + 1; --i) faNode.children[i] = faNode.children[i - 1];
                 newNode.loc = faNode.children[pos + 1] = nodeDocument.write(newNode);
                 for (int i = faNode.nodeSiz; i > pos; --i) faNode.indexes[i] = faNode.indexes[i - 1];
@@ -400,9 +505,11 @@ namespace sjtu {
         }
     }
 
-    template<class Key, class T, class Compare>
-    void bpTree<Key, T, Compare>::arrayMerge(array &curArray, array &nxtArray, bpNode &curNode, int posInNode) {
+    template<class Key, class Value, class HashType, class HashFunc, class KeyCompare, class HashCompare>
+    void bpTree<Key, Value, HashType, HashFunc, KeyCompare, HashCompare>::arrayMerge(array &curArray, array &nxtArray,
+                                                                                     bpNode &curNode, int posInNode) {
         for (int i = 0; i < nxtArray.arraySiz; ++i) curArray.data[curArray.arraySiz + i] = nxtArray.data[i];
+        arrayDocument.Delete(curArray.next);
         curArray.next = nxtArray.next;
         curArray.arraySiz += nxtArray.arraySiz;
         for (int i = posInNode + 1; i < curNode.nodeSiz; ++i) curNode.children[i] = curNode.children[i + 1];
@@ -413,22 +520,26 @@ namespace sjtu {
         else nodeDocument.update(curNode, curNode.loc);
     }
 
-    template<class Key, class T, class Compare>
-    void bpTree<Key, T, Compare>::nodeMerge(bpNode &curNode, bpNode &nxtNode, bpNode &faNode, int posInNode) {
+    template<class Key, class Value, class HashType, class HashFunc, class KeyCompare, class HashCompare>
+    void bpTree<Key, Value, HashType, HashFunc, KeyCompare, HashCompare>::nodeMerge(bpNode &curNode, bpNode &nxtNode,
+                                                                                    bpNode &faNode, int posInNode) {
         for (int i = 0; i <= nxtNode.nodeSiz; ++i) curNode.children[curNode.nodeSiz + 1 + i] = nxtNode.children[i];
         for (int i = 0; i < nxtNode.nodeSiz; ++i) curNode.indexes[curNode.nodeSiz + i + 1] = nxtNode.indexes[i];
         curNode.indexes[curNode.nodeSiz] = faNode.indexes[posInNode];
-        curNode.nodeSiz += nxtNode.nodeSiz;
-        for (int i = posInNode; i < faNode.nodeSiz--; ++i) faNode.indexes[i] = faNode.indexes[i + 1];
+        curNode.nodeSiz += nxtNode.nodeSiz + 1;
+        for (int i = posInNode; i < faNode.nodeSiz - 1; ++i) faNode.indexes[i] = faNode.indexes[i + 1];
+        --faNode.nodeSiz;
         for (int i = posInNode + 1; i <= faNode.nodeSiz; ++i) faNode.children[i] = faNode.children[i + 1];
         nodeDocument.update(curNode, curNode.loc);
-        nodeDocument.update(nxtNode, nxtNode.loc);
+        nodeDocument.Delete(nxtNode.loc);
         if (faNode.loc == root.loc) root = faNode;
         else nodeDocument.update(faNode, faNode.loc);
     }
 
-    template<class Key, class T, class Compare>
-    void bpTree<Key, T, Compare>::arrayAdoption(bpNode &curNode, array &curArray, int &posInNode) {
+    template<class Key, class Value, class HashType, class HashFunc, class KeyCompare, class HashCompare>
+    void
+    bpTree<Key, Value, HashType, HashFunc, KeyCompare, HashCompare>::arrayAdoption(bpNode &curNode, array &curArray,
+                                                                                   int &posInNode) {
         if (posInNode == 0) {
             if (posInNode == curNode.nodeSiz) return;
             else {
@@ -471,20 +582,22 @@ namespace sjtu {
         }
     }
 
-    template<class Key, class T, class Compare>
-    void bpTree<Key, T, Compare>::nodeAdoption(bpNode &curNode) {
+    template<class Key, class Value, class HashType, class HashFunc, class KeyCompare, class HashCompare>
+    void bpTree<Key, Value, HashType, HashFunc, KeyCompare, HashCompare>::nodeAdoption(bpNode &curNode) {
         if (curNode.loc == root.loc) return;
         bpNode faNode;
-        nodeDocument.read(faNode, curNode.parent);
-        int posInNode = binarySearch(faNode.children, 0, faNode.nodeSiz + 1, curNode.loc);
+        if (curNode.parent == root.loc) faNode = root;
+        else nodeDocument.read(faNode, curNode.parent);
+        int posInNode = noOrderSearch(faNode.children, 0, faNode.nodeSiz, curNode.loc);
         if (posInNode == 0) {
             if (posInNode == faNode.nodeSiz) return;
             else {
                 bpNode nxtNode;
                 nodeDocument.read(nxtNode, faNode.children[posInNode + 1]);
                 if (nxtNode.nodeSiz > MIN_KEY) {
-                    curNode.children[curNode.nodeSiz++] = nxtNode.children[0];
-                    for (int i = 0; i < nxtNode.nodeSiz - 1; ++i) nxtNode.children[i] = nxtNode.children[i + 1];
+                    curNode.children[curNode.nodeSiz + 1] = nxtNode.children[0];
+                    ++curNode.nodeSiz;
+                    for (int i = 0; i < nxtNode.nodeSiz; ++i) nxtNode.children[i] = nxtNode.children[i + 1];
                     --nxtNode.nodeSiz;
                     curNode.indexes[curNode.nodeSiz - 1] = faNode.indexes[posInNode];
                     faNode.indexes[posInNode] = nxtNode.indexes[0];
@@ -504,8 +617,9 @@ namespace sjtu {
                 bpNode nxtNode;
                 nodeDocument.read(nxtNode, faNode.children[posInNode + 1]);
                 if (nxtNode.nodeSiz > MIN_KEY) {
-                    curNode.children[curNode.nodeSiz++] = nxtNode.children[0];
-                    for (int i = 0; i < nxtNode.nodeSiz - 1; ++i) nxtNode.children[i] = nxtNode.children[i + 1];
+                    curNode.children[curNode.nodeSiz + 1] = nxtNode.children[0];
+                    ++curNode.nodeSiz;
+                    for (int i = 0; i < nxtNode.nodeSiz; ++i) nxtNode.children[i] = nxtNode.children[i + 1];
                     --nxtNode.nodeSiz;
                     curNode.indexes[curNode.nodeSiz - 1] = faNode.indexes[posInNode];
                     faNode.indexes[posInNode] = nxtNode.indexes[0];
@@ -520,8 +634,10 @@ namespace sjtu {
                 bpNode preNode;
                 nodeDocument.read(preNode, faNode.children[posInNode - 1]);
                 if (preNode.nodeSiz > MIN_KEY) {
-                    for (int i = curNode.nodeSiz++; i > 0; --i) curNode.children[i] = curNode.children[i - 1];
-                    curNode.children[0] = preNode.children[--preNode.nodeSiz];
+                    ++curNode.nodeSiz;
+                    for (int i = curNode.nodeSiz; i > 0; --i) curNode.children[i] = curNode.children[i - 1];
+                    curNode.children[0] = preNode.children[preNode.nodeSiz];
+                    --preNode.nodeSiz;
                     for (int i = curNode.nodeSiz - 1; i > 0; --i) curNode.indexes[i] = curNode.indexes[i - 1];
                     curNode.indexes[0] = faNode.indexes[posInNode - 1];
                     faNode.indexes[posInNode - 1] = preNode.indexes[preNode.nodeSiz];
@@ -538,8 +654,8 @@ namespace sjtu {
         }
     }
 
-    template<class Key, class T, class Compare>
-    vector<T> bpTree<Key, T, Compare>::query(Key key) {
+    template<class Key, class Value, class HashType, class HashFunc, class KeyCompare, class HashCompare>
+    std::vector<Value> bpTree<Key, Value, HashType, HashFunc, KeyCompare, HashCompare>::query(Key key) {
         bpNode curNode = root;
         while (!curNode.isLeaf) {
             int posInNode = keySearch(curNode.indexes, 0, curNode.nodeSiz, key);
@@ -548,12 +664,14 @@ namespace sjtu {
         int posInNode = keySearch(curNode.indexes, 0, curNode.nodeSiz, key);
         array curArray;
         arrayDocument.read(curArray, curNode.children[posInNode]);
-        vector<T> ans;
+        std::vector<Value> ans;
         bool flag = true;
         int posInArray = binarySearch(curArray.data, 0, curArray.arraySiz, key);
-        if (posInArray == curArray.arraySiz)
-            arrayDocument.read(curArray, curArray.next),
-                    posInArray = binarySearch(curArray.data, 0, curArray.arraySiz, key);
+        if (posInArray == curArray.arraySiz) {
+            arrayDocument.read(curArray, curArray.next);
+            ++posInNode;
+            posInArray = binarySearch(curArray.data, 0, curArray.arraySiz, key);
+        }
         for (int i = posInArray; i < curArray.arraySiz; ++i) {
             if (curArray.data[i].keyOf() == key) ans.push_back(curArray.data[i].valueOf());
             else {
@@ -565,8 +683,11 @@ namespace sjtu {
             flag = true;
             arrayDocument.read(curArray, curArray.next);
             for (int i = 0; i < curArray.arraySiz; ++i) {
-                if (curArray.data[i].keyOf() == key) ans.push_back(curArray.data[i].valueOf());
-                else {
+                if (curArray.data[i].keyOf() == key) {
+                    storagePair pair;
+                    storageDocument.read(pair, curArray.data[i].pos);
+                    ans.push_back(pair.valueOf());
+                } else {
                     flag = false;
                     break;
                 }
@@ -575,23 +696,39 @@ namespace sjtu {
         return ans;
     }
 
-    template<class Key, class T, class Compare>
-    void bpTree<Key, T, Compare>::indexUpdate(bpNode curNode, const Pair &indexToUpdate) {
-        bpNode faNode;
-        nodeDocument.read(faNode, curNode.parent);
-        int posInNode = binarySearch(faNode.children, 0, faNode.nodeSiz + 1, curNode.loc);
-        while (posInNode == 0 && faNode.loc != root.loc) {
-            curNode = faNode;
-            nodeDocument.read(faNode, curNode.parent);
-            posInNode = binarySearch(faNode.children, 0, faNode.nodeSiz + 1, curNode.loc);
+    template<class Key, class Value, class HashType, class HashFunc, class KeyCompare, class HashCompare>
+    void bpTree<Key, Value, HashType, HashFunc, KeyCompare, HashCompare>::indexUpdate(bpNode curNode,
+                                                                                      const indexPair &indexToUpdate) {
+        if (curNode.loc == root.loc) return;
+        else {
+            bpNode faNode;
+            if (curNode.parent == root.loc) faNode = root;
+            else nodeDocument.read(faNode, curNode.parent);
+            int posInNode = binarySearch(faNode.children, 0, faNode.nodeSiz + 1, curNode.loc);
+            if (posInNode) {
+                if (posInNode)faNode.indexes[posInNode - 1] = indexToUpdate;
+                if (faNode.loc == root.loc) root = faNode;
+                else nodeDocument.update(faNode, faNode.loc);
+            } else indexUpdate(faNode, indexToUpdate);
         }
-        if (curNode.loc == root.loc && posInNode == 0)return;
-        else faNode.indexes[posInNode - 1] = indexToUpdate;
+//        while (posInNode == 0 && faNode.loc != root.loc) {
+//            curNode = faNode;
+//            if (curNode.parent == root.loc) faNode = root;
+//            else nodeDocument.read(faNode, curNode.parent);
+//            posInNode = binarySearch(faNode.children, 0, faNode.nodeSiz + 1, curNode.loc);
+//        }
+//        if (curNode.loc == root.loc && posInNode == 0)return;
+//        else {
+//            if(posInNode)faNode.indexes[posInNode - 1] = indexToUpdate;
+//            if (faNode.loc == root.loc) root = faNode;
+//            else nodeDocument.update(faNode, faNode.loc);
+//        }
     }
 
     //闭区间 [l,r],寻找大于等于的第一个
-    template<class Key, class T, class Compare>
-    int bpTree<Key, T, Compare>::binarySearch(const int *a, int l, int r, const int &obj) {
+    template<class Key, class Value, class HashType, class HashFunc, class KeyCompare, class HashCompare>
+    int bpTree<Key, Value, HashType, HashFunc, KeyCompare, HashCompare>::binarySearch(const int *a, int l, int r,
+                                                                                      const int &obj) {
         while (l < r) {
             int mid = (r + l) >> 1;
             if (obj <= a[mid]) r = mid;
@@ -600,18 +737,30 @@ namespace sjtu {
         return r;
     }
 
-    template<class Key, class T, class Compare>
-    int bpTree<Key, T, Compare>::binarySearch(const Pair *a, int l, int r, const Key &obj) {
+    template<class Key, class Value, class HashType, class HashFunc, class KeyCompare, class HashCompare>
+    int bpTree<Key, Value, HashType, HashFunc, KeyCompare, HashCompare>::noOrderSearch(const int *a, int l, int r,
+                                                                                       const int &obj) {
+        for (int i = l; i < r; ++i)
+            if (a[i] == obj)return i;
+        return r;
+    }
+
+    template<class Key, class Value, class HashType, class HashFunc, class KeyCompare, class HashCompare>
+    int bpTree<Key, Value, HashType, HashFunc, KeyCompare, HashCompare>::binarySearch(const indexPair *a, int l, int r,
+                                                                                      const Key &obj) {
         while (l < r) {
             int mid = (r + l) >> 1;
-            if (compare(a[mid].keyOf(), obj)) l = mid + 1;
+            if (keyCompare(a[mid].keyOf(), obj)) l = mid + 1;
             else r = mid;
         }
         return r;
     }
 
-    template<class Key, class T, class Compare>
-    int bpTree<Key, T, Compare>::binarySearch(const bpTree::Pair *a, int l, int r, const Pair &obj) {
+    template<class Key, class Value, class HashType, class HashFunc, class KeyCompare, class HashCompare>
+    int
+    bpTree<Key, Value, HashType, HashFunc, KeyCompare, HashCompare>::binarySearch(const bpTree::indexPair *a, int l,
+                                                                                  int r,
+                                                                                  const indexPair &obj) {
         while (l < r) {
             int mid = (r + l) >> 1;
             if (obj <= a[mid]) r = mid;
@@ -621,19 +770,21 @@ namespace sjtu {
     }
 
     //左闭右开[l,r) 返回r
-    template<class Key, class T, class Compare>
-    int bpTree<Key, T, Compare>::keySearch(const Pair *a, int l, int r, const Key &obj) {
+    template<class Key, class Value, class HashType, class HashFunc, class KeyCompare, class HashCompare>
+    int bpTree<Key, Value, HashType, HashFunc, KeyCompare, HashCompare>::keySearch(const indexPair *a, int l, int r,
+                                                                                   const Key &obj) {
         while (l < r) {
             int mid = (r + l) >> 1;
-            if (compare(obj, a[mid].keyOf())) r = mid;
+            if (!keyCompare(a[mid].keyOf(), obj)) r = mid;
             else l = mid + 1;
         }
-        if (r && !compare(a[r - 1].keyOf(), obj) && !compare(obj, a[r - 1].keyOf()))return r - 1;
+        if (r && !keyCompare(a[r - 1].keyOf(), obj) && !keyCompare(obj, a[r - 1].keyOf()))return r - 1;
         else return r;
     }
 
-    template<class Key, class T, class Compare>
-    int bpTree<Key, T, Compare>::keySearch(const Pair *a, int l, int r, const Pair &obj) {
+    template<class Key, class Value, class HashType, class HashFunc, class KeyCompare, class HashCompare>
+    int bpTree<Key, Value, HashType, HashFunc, KeyCompare, HashCompare>::keySearch(const indexPair *a, int l, int r,
+                                                                                   const indexPair &obj) {
         while (l < r) {
             int mid = (r + l) >> 1;
             if (a[mid] <= obj) l = mid + 1;
@@ -642,15 +793,54 @@ namespace sjtu {
         return r;
     }
 
+    template<class Key, class Value, class HashType, class HashFunc, class KeyCompare, class HashCompare>
+    typename bpTree<Key, Value, HashType, HashFunc, KeyCompare, HashCompare>::iterator
+    bpTree<Key, Value, HashType, HashFunc, KeyCompare, HashCompare>::begin() {
+        array first;
+        arrayDocument.read(first, head);
+        return bpTree::iterator(first.next, head, 0, first.arraySiz, this);
+    }
 
-    template<class Key, class T, class Compare>
-    bpTree<Key, T, Compare>::array::array() {
+    template<class Key, class Value, class HashType, class HashFunc, class KeyCompare, class HashCompare>
+    typename bpTree<Key, Value, HashType, HashFunc, KeyCompare, HashCompare>::iterator
+    bpTree<Key, Value, HashType, HashFunc, KeyCompare, HashCompare>::find(Key key) {
+        bpNode curNode = root;
+        while (!curNode.isLeaf) {
+            int posInNode = keySearch(curNode.indexes, 0, curNode.nodeSiz, key);
+            nodeDocument.read(curNode, curNode.children[posInNode]);
+        }
+        int posInNode = keySearch(curNode.indexes, 0, curNode.nodeSiz, key);
+        array curArray;
+        arrayDocument.read(curArray, curNode.children[posInNode]);
+        int posInArray = binarySearch(curArray.data, 0, curArray.arraySiz, key);
+        if (posInArray == curArray.arraySiz) {
+            arrayDocument.read(curArray, curArray.next);
+            ++posInNode;
+            posInArray = binarySearch(curArray.data, 0, curArray.arraySiz, key);
+        }
+        return iterator(curArray.next, curNode.children[posInNode], posInArray, curArray.arraySiz, this);
+    }
+
+    template<class Key, class Value, class HashType, class HashFunc, class KeyCompare, class HashCompare>
+    void bpTree<Key, Value, HashType, HashFunc, KeyCompare, HashCompare>::valueUpdate(bpTree::iterator iter,
+                                                                                      Value newValue) {
+        array tem;
+        iter.master->arrayDocument.read(tem, iter.pos);
+        storagePair pair;
+        storageDocument.read(pair, tem.data[iter.num].pos);
+        pair.value = newValue;
+        storageDocument.update(pair, tem.data[iter.num].pos);
+    }
+
+
+    template<class Key, class Value, class HashType, class HashFunc, class KeyCompare, class HashCompare>
+    bpTree<Key, Value, HashType, HashFunc, KeyCompare, HashCompare>::array::array() {
         arraySiz = 0;
         next = 0;
     }
 
-    template<class Key, class T, class Compare>
-    bpTree<Key, T, Compare>::array::array(bpTree::Pair obj, int _next) {
+    template<class Key, class Value, class HashType, class HashFunc, class KeyCompare, class HashCompare>
+    bpTree<Key, Value, HashType, HashFunc, KeyCompare, HashCompare>::array::array(bpTree::indexPair obj, int _next) {
         data[0] = obj;
         arraySiz = 1;
         next = _next;
