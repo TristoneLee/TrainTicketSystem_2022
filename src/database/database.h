@@ -5,8 +5,6 @@
 #include <iostream>
 #include <utility>
 #include "vector.hpp"
-#include <vector>
-#include "MyString.h"
 
 using std::fstream;
 using std::cout;
@@ -289,7 +287,7 @@ namespace sjtu {
 
         ~bpTree();
 
-        std::vector<Value> query(Key key);
+        sjtu::vector<Value> query(Key key);
 
         bool insert(Key key, Value value);
 
@@ -655,7 +653,7 @@ namespace sjtu {
     }
 
     template<class Key, class Value, class HashType, class HashFunc, class KeyCompare, class HashCompare>
-    std::vector<Value> bpTree<Key, Value, HashType, HashFunc, KeyCompare, HashCompare>::query(Key key) {
+    sjtu::vector<Value> bpTree<Key, Value, HashType, HashFunc, KeyCompare, HashCompare>::query(Key key) {
         bpNode curNode = root;
         while (!curNode.isLeaf) {
             int posInNode = keySearch(curNode.indexes, 0, curNode.nodeSiz, key);
@@ -664,7 +662,7 @@ namespace sjtu {
         int posInNode = keySearch(curNode.indexes, 0, curNode.nodeSiz, key);
         array curArray;
         arrayDocument.read(curArray, curNode.children[posInNode]);
-        std::vector<Value> ans;
+        sjtu::vector<Value> ans;
         bool flag = true;
         int posInArray = binarySearch(curArray.data, 0, curArray.arraySiz, key);
         if (posInArray == curArray.arraySiz) {
