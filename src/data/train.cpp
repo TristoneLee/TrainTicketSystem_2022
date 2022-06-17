@@ -42,12 +42,29 @@ int Train::FindStation(const Station& station_name) const {
   return NIDX;
 }
 
-Time Train::LeavingTime(int station_idx) const { return start_time + leaving_time[station_idx]; }
-Time Train::ArrivingTime(int station_idx) const { return start_time + arriving_time[station_idx]; }
+Time Train::LeavingTime(int station_idx, int idx) const {
+  Time ret = start_time + leaving_time[station_idx];
+  if (idx) ret.date += idx;
+  return ret;
+}
+Time Train::ArrivingTime(int station_idx, int idx) const {
+  Time ret = start_time + arriving_time[station_idx];
+  if (idx) ret.date += idx;
+  return ret;
+}
 int Train::FindLeavingTrain(int station_idx, const Date& date) const {
   Time start_leaving_time = LeavingTime(station_idx);
   int ret = date - start_leaving_time.date;
-  if (ret < 0 || ret > sale_duration) return NIDX;
+  if (ret < 0 || ret >= sale_duration) return NIDX;
+  return ret;
+}
+int Train::FindLeavingTrainAfter(int station_idx, const Time& time) const {
+  Time start_leaving_time = LeavingTime(station_idx);
+  if (time < start_leaving_time) return 0;  // wait for sale begin
+  int ret = time.date - start_leaving_time.date;
+  Time now_leaving_time = start_leaving_time + ret;
+  if (now_leaving_time < time) ++ret;
+  if (ret >= sale_duration) return NIDX;
   return ret;
 }
 int Train::GetTravelTime(int depart_idx, int arrive_idx) const {

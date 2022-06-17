@@ -29,11 +29,12 @@ class Train {
   Train& operator=(const Train& other);
   int GetPrice(int depart_idx, int arrive_idx) const;
   int FindStation(const Station& station_name) const;  // return NIDX if not found
-  Time LeavingTime(int station_idx) const;
-  Time ArrivingTime(int station_idx) const;
+  Time LeavingTime(int station_idx, int idx = 0) const;
+  Time ArrivingTime(int station_idx, int idx = 0) const;
   // return the index of the train leaving station_idx on date
   // return NIDX if not found
   int FindLeavingTrain(int station_idx, const Date& date) const;
+  int FindLeavingTrainAfter(int station_idx, const Time& time) const;
   int GetTravelTime(int depart_idx, int arrive_idx) const;
   ~Train();
 };
