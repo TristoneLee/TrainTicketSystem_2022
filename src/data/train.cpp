@@ -14,22 +14,24 @@ Train::Train(const string& _train_id, int _station_num, const vector<string>& _s
     : train_id(_train_id),
       station_num(_station_num),
       seat_num(_seat_num),
+      start_time(_start_time),
       sale_date(_sale_date[0]),
       sale_duration(_sale_date[1] - _sale_date[0] + 1),
       type(_type),
       released(_released) {
-  for (int i = 0; i < station_num - 2; ++i) {
-    station_list[i] = _station_list[i];
-    price_list[i] = _price_list[i];
-    travel_time_list[i] = _travel_time_list[i];
-    stopover_time_list[i] = _stopover_time_list[i];
+  for (int i = 0; i < station_num; ++i) station_list[i] = _station_list[i];
+  price_prefix[0] = 0;
+  for (int i = 1; i < station_num; ++i) price_prefix[i] = price_prefix[i - 1] + _price_list[i - 1];
+  arriving_time[0] = -1;  // meaningless
+  leaving_time[0] = 0;    // the leaving time of the first station is start_time;
+  for (int i = 1; i < station_num - 1; ++i) {
+    arriving_time[i] = leaving_time[i - 1] + _travel_time_list[i - 1];
+    leaving_time[i] = arriving_time[i] + _stopover_time_list[i - 1];
   }
-  station_list[station_num - 2] = _station_list[station_num - 2];
-  station_list[station_num - 1] = _station_list[station_num - 1];
-  price_list[station_num - 2] = _price_list[station_num - 2];
-  travel_time_list[station_num - 2] = _travel_time_list[station_num - 2];
+  arriving_time[station_num - 1] = leaving_time[station_num - 2] + _travel_time_list[station_num - 2];
   return;
 }
+Train::Train(const Train& other) = default;
 Train& Train::operator=(const Train& other) = default;
 Train::~Train() = default;
 }  // namespace sjtu

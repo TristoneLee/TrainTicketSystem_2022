@@ -11,11 +11,11 @@ class Train {
   int station_num;
   Station station_list[kMaxStationNum];
   int seat_num;
-  int remain_seat_num[kMaxStationNum];
-  int price_list[kMaxStationNum];
+  int price_prefix[kMaxStationNum];
   Time start_time;
-  int travel_time_list[kMaxStationNum];
-  int stopover_time_list[kMaxStationNum];
+  // arriving_time and leaving_time are based on start_time
+  int arriving_time[kMaxStationNum];
+  int leaving_time[kMaxStationNum];
   Date sale_date;
   int sale_duration;
   bool released;
@@ -23,7 +23,8 @@ class Train {
   Train();
   Train(const string& _train_id, int _station_num, const vector<string>& _station_list, int _seat_num,
         const vector<int>& _price_list, Time _start_time, const vector<int>& _travel_time_list,
-        const vector<int>& _stopover_time_list, const vector<Date>& _sale_date, char _type, bool _released);
+        const vector<int>& _stopover_time_list, const vector<Date>& _sale_date, char _type, bool _released = false);
+  Train(const Train& other);
   Train& operator=(const Train& other);
   ~Train();
 };
