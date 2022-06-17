@@ -27,8 +27,14 @@ class Train {
         const vector<int>& _stopover_time_list, const vector<Date>& _sale_date, char _type, bool _released = false);
   Train(const Train& other);
   Train& operator=(const Train& other);
-  int PriceRange(int depart_idx, int arrive_idx) const;
+  int GetPrice(int depart_idx, int arrive_idx) const;
   int FindStation(const Station& station_name) const;  // return NIDX if not found
+  Time LeavingTime(int station_idx) const;
+  Time ArrivingTime(int station_idx) const;
+  // return the index of the train leaving station_idx on date
+  // return NIDX if not found
+  int FindLeavingTrain(int station_idx, const Date& date) const;
+  int GetTravelTime(int depart_idx, int arrive_idx) const;
   ~Train();
 };
 };      // namespace sjtu
