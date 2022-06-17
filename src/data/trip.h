@@ -13,7 +13,7 @@ class Trip {
   int cost;
   int time;
   Trip();
-  Trip(const TrainID& _train_id, Time _depart_time, Time _arrive_time, int _depart_idx, int _arrive_idx, int _cost);
+  Trip(const TrainID& _train_id, const Time& _depart_time, const Time& _arrive_time, int _depart_idx, int _arrive_idx, int _cost);
   Trip(const Trip& other);
   Trip& operator=(const Trip& other);
   ~Trip();
