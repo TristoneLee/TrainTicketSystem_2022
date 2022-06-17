@@ -33,6 +33,15 @@ Train::Train(const string& _train_id, int _station_num, const vector<string>& _s
 }
 Train::Train(const Train& other) = default;
 Train& Train::operator=(const Train& other) = default;
+int Train::PriceRange(int departure_idx, int terminal_idx) const {
+  return price_prefix[terminal_idx] - price_prefix[departure_idx];
+}
+int Train::FindStation(const Station& station_name) const {
+  for (int idx; idx < station_num; ++idx)
+    if (station_list[idx] == station_name) return idx;
+  return NIDX;
+}
+
 Train::~Train() = default;
 }  // namespace sjtu
 #endif  // TRAINTICKETSYSTEM_2022_SRC_DATA_TRAIN_CPP

@@ -7,6 +7,7 @@
 namespace sjtu {
 class Train {
  public:
+  static const int NIDX = -1;
   TrainID train_id;
   int station_num;
   Station station_list[kMaxStationNum];
@@ -26,6 +27,8 @@ class Train {
         const vector<int>& _stopover_time_list, const vector<Date>& _sale_date, char _type, bool _released = false);
   Train(const Train& other);
   Train& operator=(const Train& other);
+  int PriceRange(int departure_idx, int terminal_idx) const;
+  int FindStation(const Station& station_name) const;  // return NIDX if not found
   ~Train();
 };
 };      // namespace sjtu
