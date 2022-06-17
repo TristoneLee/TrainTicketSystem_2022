@@ -3,11 +3,12 @@
 #include "trip.h"
 namespace sjtu {
 Trip::Trip() = default;
-Trip::Trip(const TrainID& _train_id, const Time& _depart_time, const Time& _arrive_time, int _depart_idx,
-           int _arrive_idx, int _cost)
+Trip::Trip(const TrainID& _train_id, const Time& _depart_time, const Time& _arrive_time, int _train_idx,
+           int _depart_idx, int _arrive_idx, int _cost)
     : train_id(_train_id),
       depart_time(_depart_time),
       arrive_time(_arrive_time),
+      train_idx(_train_idx),
       depart_idx(_depart_idx),
       arrive_idx(_arrive_idx),
       cost(_cost),
