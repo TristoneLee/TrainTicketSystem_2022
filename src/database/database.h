@@ -4,6 +4,7 @@
 #include <fstream>
 #include <iostream>
 #include <utility>
+#include <vector>
 #include "vector.hpp"
 #include "defaultHash.h"
 
@@ -20,7 +21,7 @@ namespace sjtu {
         std::string file_name;
         int sizeofT = sizeof(Type);
         int count = 0;
-        vector<int> availablePlace;
+        std::vector<int> availablePlace;
     public:
         iofile() = default;
 
