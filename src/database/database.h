@@ -11,6 +11,7 @@ using std::fstream;
 using std::cout;
 using std::cin;
 
+
 namespace sjtu {
     template<class Type>
     class iofile {

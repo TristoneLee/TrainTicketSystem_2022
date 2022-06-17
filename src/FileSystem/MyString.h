@@ -5,7 +5,7 @@
 #include "DefaultConst.hpp"
 extern const int string_size;
 using std::string;
-// class MyString;   
+// class MyString;
 class MyString {
  private:
   char str[string_size];
@@ -13,6 +13,7 @@ class MyString {
  public:
   MyString();
   MyString(const string& other);
+  MyString(const char* other);
   int Length()const;
 	MyString& operator=(const MyString& other);
 	friend bool operator<(const MyString& lhs,const MyString& rhs);
