@@ -11,6 +11,9 @@ class StationPass {
   StationPass(const StationPass& other);
   ~StationPass();
 };
-
+class StationPassHash {
+ public:
+  TrainID operator()(const StationPass& obj) const;
+};
 }  // namespace sjtu
 #endif  // TRAINTICKETSYSTEM_2022_SRC_DATA_STATION_PASS_H
