@@ -136,6 +136,11 @@ string Time::ToString() const {  // only output the time hh:mm
   ret.push_back('0' + minute % 10);
   return ret;
 }
+
+ostream& operator<<(ostream& os, const Time& time) {
+  os << time.date.ToString() << ' ' << time.ToString();
+  return os;
+}
 Time::~Time() = default;
 }  // namespace sjtu
 #endif  // TRAINTICKETSYSTEM_2022_SRC_TOOLS_TIMES_CPP
