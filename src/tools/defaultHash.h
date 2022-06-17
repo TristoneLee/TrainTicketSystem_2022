@@ -3,6 +3,7 @@
 
 template<class valueType>
 class defaultHash {
+public:
     int operator()(valueType x){return 0;}
 };
 
