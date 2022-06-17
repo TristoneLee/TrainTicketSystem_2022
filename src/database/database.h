@@ -5,6 +5,7 @@
 #include <iostream>
 #include <utility>
 #include "vector.hpp"
+#include "defaultHash.h"
 
 using std::fstream;
 using std::cout;
@@ -83,8 +84,8 @@ namespace sjtu {
 
     template<class Key,
             class Value,
-            class HashType,
-            class HashFunc,
+            class HashType=int,
+            class HashFunc=defaultHash<Value>,
             class KeyCompare=std::less<Key>,
             class HashCompare=std::less<HashType>>
     class bpTree {
