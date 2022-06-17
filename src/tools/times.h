@@ -38,7 +38,7 @@ class Time {
   Date date;
   int hour, minute;
   Time(int _hour = 0, int _minute = 0, const Date& _day = Date());
-  Time(const string& input);
+  Time(const string& input, const Date& _day = Date());
   Time(const Time& other);
   Time& operator=(const Time& other);
   bool operator==(const Time& other) const;
