@@ -3,6 +3,8 @@
 #include "train_ticket_system.h"
 
 #include <iostream>
+
+#include "sort.hpp"
 using std::cerr;
 using std::cin;
 using std::cout;
@@ -28,6 +30,17 @@ bool TrainTicketSystem::CheckFirst() {
   }
   temp_file.close();
   return false;
+}
+void TrainTicketSystem::PrintTrip(const Trip& trip, const string& depart_station, const string& arrive_station) {
+  cout << trip.train_id << ' ';
+  cout << depart_station << ' ';
+  cout << trip.depart_time << ' ';
+  cout << "-> ";
+  cout << arrive_station << ' ';
+  cout << trip.arrive_time << ' ';
+  cout << trip.cost << ' ';
+  Seats seat = ticket_system.QuerySeats(trip.train_id, trip.train_idx);
+  cout << seat.QuerySeat(trip.depart_idx, trip.arrive_idx) << endl;
 }
 TrainTicketSystem::TrainTicketSystem() {}
 void TrainTicketSystem::Work() {
@@ -95,19 +108,77 @@ void TrainTicketSystem::Work() {
         cout << new_user << endl;
       }
       if (now_cmd.op == "add_train") {
-        // TODO
+        const string& train_id = now_cmd.args['i'];
+        const int station_num = ToInt(now_cmd.args['n']);
+        vector<string> station_list = SplitIntoStrings(now_cmd.args['s']);
+        const int seat_num = ToInt(now_cmd.args['m']);
+        vector<int> price_list = SplitIntoInts(now_cmd.args['p']);
+        vector<int> travel_time_list = SplitIntoInts(now_cmd.args['t']);
+        vector<int> stopover_time_list = SplitIntoInts(now_cmd.args['o']);
+        vector<Date> sale_date = SplitIntoDates(now_cmd.args['d']);
+        Time start_time(now_cmd.args['x'], sale_date[0]);
+        const char type = now_cmd.args['y'][0];
+        train_system.AddTrain(train_id, station_num, station_list, seat_num, price_list, start_time, travel_time_list,
+                              stopover_time_list, sale_date, type);
+        cout << '0' << endl;
+      }
+      if (now_cmd.op == "delete_train") {
+        const string& train_id = now_cmd.args['i'];
+        train_system.DeleteTrain(train_id);
+        cout << '0' << endl;
       }
       if (now_cmd.op == "release_train") {
-        // TODO
+        const string& train_id = now_cmd.args['i'];
+        Train train = train_system.ReleaseTrain(train_id);
+        ticket_system.ReleaseSeats(train_id, train.seat_num, train.sale_duration);
+        cout << '0' << endl;
       }
       if (now_cmd.op == "query_train") {
-        // TODO
+        const string& train_id = now_cmd.args['i'];
+        Date date(now_cmd.args['d']);
+        Train train = train_system.QueryTrain(train_id);
+        int idx = train.sale_date - date;
+        Assert(idx >= 0 && idx < train.sale_duration, "query_train fail: date not in sale_date");
+        Seats seat = ticket_system.QuerySeats(train_id, idx);
+        cout << train_id << train.type << endl;
+        cout << "xx-xx xx:xx"
+             << " -> " << train.LeavingTime(0, idx) << ' ';
+        cout << 0 << ' ';
+        cout << seat.QuerySeat(0, 1) << endl;
+        for (int station_idx = 1; station_idx < train.station_num - 1; ++station_idx) {
+          cout << train.ArrivingTime(station_idx, idx) << " -> " << train.LeavingTime(station_idx, idx) << ' ';
+          cout << train.price_prefix[station_idx] << ' ';
+          cout << seat.QuerySeat(station_idx, station_idx + 1) << endl;
+        }
+        // output the terminal station
+        cout << train.ArrivingTime(train.station_num - 1, idx) << " -> "
+             << "xx-xx xx:xx" << ' ';
+        cout << train.price_prefix[train.station_num - 1] << ' ';
+        cout << 'x' << endl;
       }
       if (now_cmd.op == "query_ticket") {
-        // TODO
+        const string& depart_station = now_cmd.args['s'];
+        const string& arrive_station = now_cmd.args['t'];
+        Date date(now_cmd.args['d']);
+        bool sort_by_time = true;
+        if (now_cmd.args.count('p') && now_cmd.args['p'] == "cost") sort_by_time = false;
+        auto trip_list = train_system.QueryTicket(depart_station, arrive_station, date);
+        if (sort_by_time)
+          Sort<Trip, TripCmpByTime>(trip_list);
+        else
+          Sort<Trip, TripCmpByCost>(trip_list);
+        cout << trip_list.size() << endl;
+        for (const auto& trip : trip_list) PrintTrip(trip, depart_station, arrive_station);
       }
       if (now_cmd.op == "query_transfer") {
-        // TODO
+        const string& depart_station = now_cmd.args['s'];
+        const string& arrive_station = now_cmd.args['t'];
+        Date date(now_cmd.args['d']);
+        bool sort_by_time = true;
+        if (now_cmd.args.count('p') && now_cmd.args['p'] == "cost") sort_by_time = false;
+        auto transfer_trip = train_system.QueryTransfer(depart_station, arrive_station, date, sort_by_time);
+        PrintTrip(transfer_trip.trips[0], depart_station, transfer_trip.transfer_station);
+        PrintTrip(transfer_trip.trips[1], transfer_trip.transfer_station, arrive_station);
       }
       if (now_cmd.op == "buy_ticket") {
         // TODO

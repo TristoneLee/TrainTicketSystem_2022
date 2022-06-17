@@ -71,7 +71,8 @@ vector<Trip> TrainSystem::QueryTicket(const string& depart_station, const string
         Time depart_time = train.LeavingTime(depart_station_idx, train_idx);
         Time arrive_time = train.ArrivingTime(depart_station_idx, train_idx);
         int cost = train.GetPrice(depart_station_idx, arrive_station_idx);
-        ret.push_back(Trip(train.train_id, depart_time, arrive_time, depart_station_idx, arrive_station_idx, cost));
+        ret.push_back(
+            Trip(train.train_id, depart_time, arrive_time, train_idx, depart_station_idx, arrive_station_idx, cost));
       }
     }
     ++idx_dep;
@@ -122,10 +123,10 @@ TransferTrip TrainSystem::QueryTransfer(const string& depart_station, const stri
           if (arr_train_idx != Train::NIDX) {
             Time arr_train_leaving_time = arr_train.LeavingTime(transfer_station_idx_in_arr, arr_train_idx);
             Time arr_train_arriving_time = arr_train.ArrivingTime(arrive_station_idx, arr_train_idx);
-            Trip dep_trip(dep_train.train_id, dep_train_leaving_time, dep_train_arriving_time, depart_station_idx,
-                          transfer_station_idx_in_dep,
+            Trip dep_trip(dep_train.train_id, dep_train_leaving_time, dep_train_arriving_time, dep_train_idx,
+                          depart_station_idx, transfer_station_idx_in_dep,
                           dep_train.GetPrice(depart_station_idx, transfer_station_idx_in_dep));
-            Trip arr_trip(arr_train.train_id, arr_train_leaving_time, arr_train_arriving_time,
+            Trip arr_trip(arr_train.train_id, arr_train_leaving_time, arr_train_arriving_time, arr_train_idx,
                           transfer_station_idx_in_arr, arrive_station_idx,
                           arr_train.GetPrice(transfer_station_idx_in_arr, arrive_station_idx));
             TransferTrip now_ans(dep_trip, arr_trip, transfer_station);
