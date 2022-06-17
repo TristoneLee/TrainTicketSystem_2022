@@ -2,10 +2,10 @@
 #include "MyString.h"
 #include <stdio.h>
 
-const char *savePath1="E:\课程资料\大一下\数据结构\大作业\TrainTicketSystem_2022\arrayDocument";
-const char *savePath2="E:\课程资料\大一下\数据结构\大作业\TrainTicketSystem_2022\nodeDocument";
-const char *savePath3="E:\课程资料\大一下\数据结构\大作业\TrainTicketSystem_2022\storageDocument";
-const char *savePath4="E:\课程资料\大一下\数据结构\大作业\TrainTicketSystem_2022\basicData";
+const char *savePath1 = "./arrayDocument.dat";
+const char *savePath2 = "./nodeDocument.dat";
+const char *savePath3 = "./storageDocument.dat";
+const char *savePath4 = "./basicData.dat";
 
 class testHash {
 public:
@@ -19,7 +19,7 @@ int main() {
     remove(savePath4);
     int m;
     cin >> m;
-    sjtu::bpTree<MyString, int,int, testHash> dataBase("");
+    sjtu::bpTree<MyString, int, int, testHash> dataBase("");
     std::string command;
     for (int i = 0; i < m; ++i) {
         cin >> command;
@@ -27,12 +27,12 @@ int main() {
             char key[65];
             int value;
             cin >> key >> value;
-            for(int j=0;j<15;++j) dataBase.insert(key, value+10*j);
+            for (int j = 0; j < 15; ++j) dataBase.insert(key, value + 10 * j);
         } else if (command == "delete") {
             char key[65];
             int value;
             cin >> key >> value;
-            for(int j=0;j<15;++j) dataBase.erase(key, value+10*j);
+            for (int j = 0; j < 15; ++j) dataBase.erase(key, value + 10 * j);
         } else if (command == "find") {
             char key[65];
             int value;
@@ -45,7 +45,7 @@ int main() {
 //                ++iter;
 //            }
             if (!ans.empty()) {
-                for (auto iter = ans.begin(); iter != ans.end()&&*iter<10; ++iter) cout << *iter << " ";
+                for (auto iter = ans.begin(); iter != ans.end() && *iter < 10; ++iter) cout << *iter << " ";
                 cout << '\n';
             } else cout << "null" << '\n';
         }

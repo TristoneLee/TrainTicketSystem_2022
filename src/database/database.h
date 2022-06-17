@@ -25,7 +25,7 @@ namespace sjtu {
     public:
         iofile() = default;
 
-        explicit iofile(const std::string &_file_name) : file_name(_file_name) {
+        explicit iofile(const std::string &_file_name) : file_name(_file_name+".dat") {
             file.open(file_name);
             if (file) {
                 file.seekg(0);
@@ -331,7 +331,7 @@ namespace sjtu {
     bpTree<Key, Value, HashType, HashFunc, KeyCompare, HashCompare>::bpTree(std::string name)
             :root(), nodeDocument(name + "nodeDocument"), arrayDocument(name + "arrayDocument"),
              storageDocument(name + "storageDocument") {
-        basicData.open(name + "basicData");
+        basicData.open(name + "basicData"+".dat");
         if (basicData) {
             basicData.seekg(0);
             basicData.read(reinterpret_cast<char *>(&siz), sizeof(int));
@@ -343,7 +343,7 @@ namespace sjtu {
             nodeDocument.read(root, locOfRoot);
         } else {
             basicData.clear();
-            basicData.open(name + "basicData", fstream::out);
+            basicData.open(name + "basicData"+".dat", fstream::out);
             basicData.close();
             siz = 0;
             head = 0;
@@ -355,7 +355,7 @@ namespace sjtu {
     template<class Key, class Value, class HashType, class HashFunc, class KeyCompare, class HashCompare>
     bpTree<Key, Value, HashType, HashFunc, KeyCompare, HashCompare>::~bpTree() {
         locOfRoot = root.loc;
-        basicData.open(filename + "basicData");
+        basicData.open(filename + "basicData.dat");
         basicData.seekp(0);
         basicData.write(reinterpret_cast<char *>(&siz), sizeof(int));
         basicData.seekp(sizeof(int));
@@ -657,6 +657,8 @@ namespace sjtu {
 
     template<class Key, class Value, class HashType, class HashFunc, class KeyCompare, class HashCompare>
     sjtu::vector<Value> bpTree<Key, Value, HashType, HashFunc, KeyCompare, HashCompare>::query(Key key) {
+        sjtu::vector<Value> ans;
+        if(siz==0) return  ans;
         bpNode curNode = root;
         while (!curNode.isLeaf) {
             int posInNode = keySearch(curNode.indexes, 0, curNode.nodeSiz, key);
@@ -665,7 +667,6 @@ namespace sjtu {
         int posInNode = keySearch(curNode.indexes, 0, curNode.nodeSiz, key);
         array curArray;
         arrayDocument.read(curArray, curNode.children[posInNode]);
-        sjtu::vector<Value> ans;
         bool flag = true;
         int posInArray = binarySearch(curArray.data, 0, curArray.arraySiz, key);
         if (posInArray == curArray.arraySiz) {
@@ -709,7 +710,7 @@ namespace sjtu {
             bpNode faNode;
             if (curNode.parent == root.loc) faNode = root;
             else nodeDocument.read(faNode, curNode.parent);
-            int posInNode = binarySearch(faNode.children, 0, faNode.nodeSiz + 1, curNode.loc);
+            int posInNode = noOrderSearch(faNode.children, 0, faNode.nodeSiz + 1, curNode.loc);
             if (posInNode) {
                 if (posInNode)faNode.indexes[posInNode - 1] = indexToUpdate;
                 if (faNode.loc == root.loc) root = faNode;
