@@ -312,6 +312,8 @@ namespace sjtu {
 
         iterator begin();
 
+        Value dirRead(int pos);
+
     };
 
     template<class Key, class Value, class HashType, class HashFunc, class KeyCompare, class HashCompare>
@@ -664,7 +666,7 @@ namespace sjtu {
     template<class Key, class Value, class HashType, class HashFunc, class KeyCompare, class HashCompare>
     sjtu::vector<Value> bpTree<Key, Value, HashType, HashFunc, KeyCompare, HashCompare>::query(Key key) {
         sjtu::vector<Value> ans;
-        if(siz==0) return  ans;
+        if (siz == 0) return ans;
         bpNode curNode = root;
         while (!curNode.isLeaf) {
             int posInNode = keySearch(curNode.indexes, 0, curNode.nodeSiz, key);
@@ -682,21 +684,20 @@ namespace sjtu {
         }
         for (int i = posInArray; i < curArray.arraySiz; ++i) {
             storagePair pair;
-            if (curArray.data[i].keyOf() == key) {
+            if (!keyCompare(curArray.data[i].keyOf(),key)&&!keyCompare(key,curArray.data[i].keyOf())) {
                 storageDocument.read(pair, curArray.data[i].pos);
                 ans.push_back(pair.valueOf());
-            }
-            else {
+            } else {
                 flag = false;
                 break;
             }
         }
-        while (flag) {
+        while (flag && curArray.next) {
             flag = true;
             arrayDocument.read(curArray, curArray.next);
             storagePair pair;
             for (int i = 0; i < curArray.arraySiz; ++i) {
-                if (curArray.data[i].keyOf() == key) {
+                if (!keyCompare(curArray.data[i].keyOf(),key)&&!keyCompare(key,curArray.data[i].keyOf())) {
                     storageDocument.read(pair, curArray.data[i].pos);
                     ans.push_back(pair.valueOf());
                 } else {
@@ -856,6 +857,13 @@ namespace sjtu {
         data[0] = obj;
         arraySiz = 1;
         next = _next;
+    }
+
+    template<class Key, class Value, class HashType, class HashFunc, class KeyCompare, class HashCompare>
+    Value bpTree<Key, Value, HashType, HashFunc, KeyCompare, HashCompare>::dirRead(int pos) {
+        Value result;
+        storageDocument.read(result,pos);
+        return result;
     }
 
 }
