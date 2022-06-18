@@ -312,6 +312,8 @@ namespace sjtu {
 
         iterator begin();
 
+        Value dirRead(int pos);
+
     };
 
     template<class Key, class Value, class HashType, class HashFunc, class KeyCompare, class HashCompare>
@@ -856,6 +858,13 @@ namespace sjtu {
         data[0] = obj;
         arraySiz = 1;
         next = _next;
+    }
+
+    template<class Key, class Value, class HashType, class HashFunc, class KeyCompare, class HashCompare>
+    Value bpTree<Key, Value, HashType, HashFunc, KeyCompare, HashCompare>::dirRead(int pos) {
+        Value result;
+        storageDocument.read(result,pos);
+        return result;
     }
 
 }
