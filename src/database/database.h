@@ -678,13 +678,17 @@ namespace sjtu {
         bool flag = true;
         int posInArray = binarySearch(curArray.data, 0, curArray.arraySiz, key);
         if (posInArray == curArray.arraySiz) {
-            arrayDocument.read(curArray, curArray.next);
-            ++posInNode;
-            posInArray = binarySearch(curArray.data, 0, curArray.arraySiz, key);
+            if(curArray.next!=0) {
+                arrayDocument.read(curArray, curArray.next);
+                ++posInNode;
+                posInArray = binarySearch(curArray.data, 0, curArray.arraySiz, key);
+            }
+            else return ans;
         }
         for (int i = posInArray; i < curArray.arraySiz; ++i) {
             storagePair pair;
             if (!keyCompare(curArray.data[i].keyOf(),key)&&!keyCompare(key,curArray.data[i].keyOf())) {
+//            if (curArray.data[i].keyOf()==key) {
                 storageDocument.read(pair, curArray.data[i].pos);
                 ans.push_back(pair.valueOf());
             } else {
@@ -698,6 +702,7 @@ namespace sjtu {
             storagePair pair;
             for (int i = 0; i < curArray.arraySiz; ++i) {
                 if (!keyCompare(curArray.data[i].keyOf(),key)&&!keyCompare(key,curArray.data[i].keyOf())) {
+//                if (curArray.data[i].keyOf()==key) {
                     storageDocument.read(pair, curArray.data[i].pos);
                     ans.push_back(pair.valueOf());
                 } else {
