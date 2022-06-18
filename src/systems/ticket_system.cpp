@@ -8,13 +8,13 @@ void TicketSystem::ReleaseSeats(const TrainID& train_id, int total_seat, int sal
   Seats seat(total_seat);
   for (int idx = 0; idx < sale_duration; ++idx) {
     train_idx.idx = idx;
-    seats_.Insert(train_idx, seat);
+    seats_.insert(train_idx, seat);
   }
   return;
 }
 Seats TicketSystem::QuerySeats(const TrainID& train_id, int idx) {
   TrainIndex train_idx(train_id, idx);
-  return seats_.Find(train_idx).front();
+  return seats_.query(train_idx).front();
 }
 TicketSystem::~TicketSystem() = default;
 }  // namespace sjtu

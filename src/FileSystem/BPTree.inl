@@ -162,7 +162,7 @@ void FileMap<KeyType, ValueType, ValueIndexType, HashFunc, IndexCompare,
 template <class KeyType, class ValueType, class ValueIndexType, class HashFunc,
           class IndexCompare, class KeyCompare, class IndexLess>
 void FileMap<KeyType, ValueType, ValueIndexType, HashFunc, IndexCompare,
-             KeyCompare, IndexLess>::Insert(const KeyType& key,
+             KeyCompare, IndexLess>::insert(const KeyType& key,
                                             const ValueType& value) {
   auto ctx_ptr = ctx_file.fnew(value);
   if (!root) {
@@ -215,7 +215,7 @@ template <class KeyType, class ValueType, class ValueIndexType, class HashFunc,
           class IndexCompare, class KeyCompare, class IndexLess>
 vector<ValueType>
 FileMap<KeyType, ValueType, ValueIndexType, HashFunc, IndexCompare, KeyCompare,
-        IndexLess>::Find(const KeyType& key) {
+        IndexLess>::query(const KeyType& key) {
   vector<ValueType> ans;
   if (!root) return ans;
   Node root_node(root);
@@ -253,7 +253,7 @@ void FileMap<KeyType, ValueType, ValueIndexType, HashFunc, IndexCompare,
 template <class KeyType, class ValueType, class ValueIndexType, class HashFunc,
           class IndexCompare, class KeyCompare, class IndexLess>
 void FileMap<KeyType, ValueType, ValueIndexType, HashFunc, IndexCompare,
-             KeyCompare, IndexLess>::Erase(const KeyType& key,
+             KeyCompare, IndexLess>::erase(const KeyType& key,
                                            const ValueType& value) {
   IndexType tmp_index = std::make_pair(key, HashFunc()(value));
   if (!root) return;

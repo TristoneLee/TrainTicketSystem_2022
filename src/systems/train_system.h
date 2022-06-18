@@ -1,6 +1,6 @@
 #ifndef TRAINTICKETSYSTEM_2022_SRC_SYSTEMS_TRAIN_SYSTEM_H
 #define TRAINTICKETSYSTEM_2022_SRC_SYSTEMS_TRAIN_SYSTEM_H
-#include "BPTree.h"
+#include "database.h"
 #include "station_pass.h"
 #include "str.hpp"
 #include "train.h"
@@ -8,8 +8,8 @@
 namespace sjtu {
 class TrainSystem {
  private:
-  FileMap<TrainID, Train> trains_;
-  FileMap<Station, StationPass, TrainID, StationPassHash> station_passes_;
+  bpTree<TrainID, Train> trains_;
+  bpTree<Station, StationPass, TrainID, StationPassHash> station_passes_;
 
  public:
   TrainSystem();

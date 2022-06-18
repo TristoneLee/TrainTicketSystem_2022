@@ -11,6 +11,7 @@ class TrainIndex {
   TrainIndex(const TrainIndex& other);
   TrainIndex& operator=(const TrainIndex& other);
   bool operator<(const TrainIndex& other) const;
+  bool operator==(const TrainIndex& other) const;
   ~TrainIndex();
 };
 }  // namespace sjtu

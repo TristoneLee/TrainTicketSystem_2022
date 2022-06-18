@@ -48,11 +48,11 @@ class FileMap {
  public:
   FileMap(const string& _file_name);
   void Print();
-  void Insert(const KeyType& key, const ValueType& value);
-  std::vector<ValueType> Find(const KeyType& key);
+  void insert(const KeyType& key, const ValueType& value);
+  std::vector<ValueType> query(const KeyType& key);
   std::vector<ValueType> FindAll();
   // ValueType Find(const KeyType& key, const ValueIndexType index);
-  void Erase(const KeyType& key, const ValueType& value);
+  void erase(const KeyType& key, const ValueType& value);
 };
 
 template <class KeyType, class ValueType, class ValueIndexType, class HashFunc,

@@ -10,43 +10,43 @@ TrainSystem::TrainSystem() : trains_("TrainSystem_train_"), station_passes_("Tra
 void TrainSystem::AddTrain(const string& train_id, int station_num, const vector<string>& station_list, int _seat_num,
                            const vector<int>& price_list, Time start_time, const vector<int>& travel_time_list,
                            const vector<int>& stopover_time_list, const vector<Date>& sale_date, char type) {
-  Assert(trains_.Find(train_id).empty(), "add_train fail : train_id already exists");
+  Assert(trains_.query(train_id).empty(), "add_train fail : train_id already exists");
   Train train(train_id, station_num, station_list, _seat_num, price_list, start_time, travel_time_list,
               stopover_time_list, sale_date, type);
-  trains_.Insert(train_id, train);
+  trains_.insert(train_id, train);
 }
 void TrainSystem::DeleteTrain(const string& train_id) {
-  auto find_result = trains_.Find(train_id);
+  auto find_result = trains_.query(train_id);
   Assert(!find_result.empty(), "delete_train fail : train_id not exists");
   Train train = find_result.front();
   Assert(!train.released, "delete_train fail : train is already released");
-  trains_.Erase(train_id, train);
+  trains_.erase(train_id, train);
   return;
 }
 Train TrainSystem::ReleaseTrain(const string& train_id) {
-  auto find_result = trains_.Find(train_id);
+  auto find_result = trains_.query(train_id);
   Assert(!find_result.empty(), "release_train fail : train does not exists");
   Train train = find_result.front();
   Assert(!train.released, "release_train fail : train is already released");
-  trains_.Erase(train_id, train);
+  trains_.erase(train_id, train);
   train.released = true;
-  trains_.Insert(train_id, train);
+  trains_.insert(train_id, train);
   // add the train to all the stations it passes
   for (int idx = 0; idx < train.station_num; ++idx) {
     const Station& now_station = train.station_list[idx];
     StationPass station_pass(train_id, idx);
-    station_passes_.Insert(now_station, station_pass);
+    station_passes_.insert(now_station, station_pass);
   }
   return train;
 }
 Train TrainSystem::QueryTrain(const string& train_id) {
-  auto find_result = trains_.Find(train_id);
+  auto find_result = trains_.query(train_id);
   Assert(!find_result.empty(), "query_train fail : train does not exists");
   return find_result.front();
 }
 vector<Trip> TrainSystem::QueryTicket(const string& depart_station, const string& arrive_station, Date date) {
-  auto depart_station_pass = station_passes_.Find(depart_station);
-  auto arrive_station_pass = station_passes_.Find(arrive_station);
+  auto depart_station_pass = station_passes_.query(depart_station);
+  auto arrive_station_pass = station_passes_.query(arrive_station);
   int idx_dep = 0, idx_arr = 0;
   int lst_dep = depart_station_pass.size(), lst_arr = arrive_station_pass.size();
   vector<Trip> ret;
@@ -62,7 +62,7 @@ vector<Trip> TrainSystem::QueryTicket(const string& depart_station, const string
     // find a train that passes both stations
     if (depart_station_pass[idx_dep].idx < arrive_station_pass[idx_arr].idx) {
       // the train passes the depart station first
-      Train train = trains_.Find(depart_station_pass[idx_dep].train_id).front();
+      Train train = trains_.query(depart_station_pass[idx_dep].train_id).front();
       const int& depart_station_idx = depart_station_pass[idx_dep].idx;
       const int& arrive_station_idx = arrive_station_pass[idx_arr].idx;
       int train_idx = train.FindLeavingTrain(depart_station_idx, date);
@@ -82,8 +82,8 @@ vector<Trip> TrainSystem::QueryTicket(const string& depart_station, const string
 }
 TransferTrip TrainSystem::QueryTransfer(const string& depart_station, const string& arrive_station, Date date,
                                         bool SortByTime) {
-  auto depart_station_pass = station_passes_.Find(depart_station);
-  auto arrive_station_pass = station_passes_.Find(arrive_station);
+  auto depart_station_pass = station_passes_.query(depart_station);
+  auto arrive_station_pass = station_passes_.query(arrive_station);
   int idx_dep = 0, idx_arr = 0;
   int lst_dep = depart_station_pass.size(), lst_arr = arrive_station_pass.size();
   TransferTrip ret;
@@ -101,7 +101,7 @@ TransferTrip TrainSystem::QueryTransfer(const string& depart_station, const stri
     return;
   };
   for (; idx_dep < lst_dep; idx_dep++) {
-    Train dep_train = trains_.Find(depart_station_pass[idx_dep].train_id).front();
+    Train dep_train = trains_.query(depart_station_pass[idx_dep].train_id).front();
     const int& depart_station_idx = depart_station_pass[idx_dep].idx;
     // can be used to find whether the station is in the train and where it is
     linked_hashmap<Station, int, StationHash> station_idx_map;
@@ -110,7 +110,7 @@ TransferTrip TrainSystem::QueryTransfer(const string& depart_station, const stri
     if (dep_train_idx == Train::NIDX) continue;  // train is not on sale on date
     Time dep_train_leaving_time = dep_train.LeavingTime(depart_station_idx, dep_train_idx);
     for (idx_arr = 0; idx_arr < lst_arr; idx_arr++) {
-      Train arr_train = trains_.Find(arrive_station_pass[idx_arr].train_id).front();
+      Train arr_train = trains_.query(arrive_station_pass[idx_arr].train_id).front();
       const int& arrive_station_idx = arrive_station_pass[idx_arr].idx;
       for (int i = 0; i < arrive_station_idx; ++i)
         if (station_idx_map.count(arr_train.station_list[i])) {

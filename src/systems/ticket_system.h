@@ -1,12 +1,12 @@
 #ifndef TRAINTICKETSYSTEM_2022_SRC_SYSTEMS_TICKET_SYSTEM_H
 #define TRAINTICKETSYSTEM_2022_SRC_SYSTEMS_TICKET_SYSTEM_H
-#include "BPTree.h"
+#include "database.h"
 #include "seats.h"
 #include "train_index.h"
 namespace sjtu {
 class TicketSystem {
  private:
-  FileMap<TrainIndex, Seats> seats_;
+  bpTree<TrainIndex, Seats> seats_;
 
  public:
   TicketSystem();

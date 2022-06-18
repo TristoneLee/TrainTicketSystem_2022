@@ -10,6 +10,7 @@ bool TrainIndex::operator<(const TrainIndex& other) const {
   if (train_id != other.train_id) return train_id < other.train_id;
   return idx < other.idx;
 }
+bool TrainIndex::operator==(const TrainIndex& other) const { return train_id == other.train_id && idx == other.idx; }
 TrainIndex::~TrainIndex() = default;
 }  // namespace sjtu
 #endif  // TRAINTICKETSYSTEM_2022_SRC_DATA_TRAIN_INDEX_CPP
