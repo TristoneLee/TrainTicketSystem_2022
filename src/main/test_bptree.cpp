@@ -27,12 +27,12 @@ int main() {
             char key[65];
             int value;
             cin >> key >> value;
-            for (int j = 0; j < 15; ++j) dataBase.insert(key, value + 10 * j);
+            for (int j = 0; j < 100; ++j) dataBase.insert(key, value + 10 * j);
         } else if (command == "delete") {
             char key[65];
             int value;
             cin >> key >> value;
-            for (int j = 0; j < 15; ++j) dataBase.erase(key, value + 10 * j);
+            for (int j = 0; j < 100; ++j) dataBase.erase(key, value + 10 * j);
         } else if (command == "find") {
             char key[65];
             int value;

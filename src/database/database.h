@@ -7,6 +7,7 @@
 #include <vector>
 #include "vector.hpp"
 #include "defaultHash.h"
+#include "rollback.h"
 
 using std::fstream;
 using std::cout;
@@ -41,6 +42,14 @@ namespace sjtu {
         }
 
 
+        ~iofile(){
+            file.open(file_name);
+            file.seekp(0);
+            file.write(reinterpret_cast<char*>(&count),sizeof(int));
+            file.close();
+        }
+
+
         //在文件合适位置写入类对象t，并返回写入的位置索引index
         //位置索引意味着当输入正确的位置索引index，在以下三个函数中都能顺利的找到目标对象进行操作
         //位置索引index可以取为对象写入的起始位置
@@ -53,8 +62,6 @@ namespace sjtu {
                 tmp = availablePlace.back();
                 availablePlace.pop_back();
             }
-            file.seekp(0);
-            file.write(reinterpret_cast<char *>(&count), sizeof(int));
             file.seekp(tmp);
             file.write(reinterpret_cast<char *>(&t), sizeofT);
             file.close();
@@ -181,7 +188,6 @@ namespace sjtu {
             int children[MAX_CHILD]{};
 
             bpNode();
-
         };
 
         class array {
@@ -292,7 +298,7 @@ namespace sjtu {
 
         sjtu::vector<Value> query(Key key);
 
-        bool insert(Key key, Value value);
+        int insert(Key key, Value value);
 
         bool erase(Key key, Value value);
 
@@ -367,7 +373,7 @@ namespace sjtu {
     }
 
     template<class Key, class Value, class HashType, class HashFunc, class KeyCompare, class HashCompare>
-    bool bpTree<Key, Value, HashType, HashFunc, KeyCompare, HashCompare>::insert(Key key, Value value) {
+    int bpTree<Key, Value, HashType, HashFunc, KeyCompare, HashCompare>::insert(Key key, Value value) {
         HashType valueHash = hashFunc(value);
         indexPair obj(key, valueHash, 0);
         if (siz == 0) {
@@ -388,7 +394,7 @@ namespace sjtu {
         array curArray;
         arrayDocument.read(curArray, curNode.children[posInNode]);
         int posInArray = binarySearch(curArray.data, 0, curArray.arraySiz, obj);
-        if (curArray.data[posInArray] == obj) return false;
+        if (curArray.data[posInArray] == obj) return 0;
         storagePair pair(key, value);
         int valuePos = storageDocument.write(pair);
         obj.pos = valuePos;
@@ -402,7 +408,7 @@ namespace sjtu {
         else root = curNode;
         ++siz;
         if (curArray.arraySiz == MAX_DATA) arraySplit(curNode, curArray, posInNode);
-        return true;
+        return valuePos;
     }
 
     template<class Key, class Value, class HashType, class HashFunc, class KeyCompare, class HashCompare>
