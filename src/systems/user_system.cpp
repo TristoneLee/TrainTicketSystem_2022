@@ -10,9 +10,9 @@ namespace sjtu {
 UserSystem::UserSystem() : users_("UserSystem_users_") {}
 void UserSystem::AddUser(const string& username, const string& name, const string& password, const string& mail_addr,
                          int privilege) {
-  Assert(users_.Find(username).empty());
+  Assert(users_.query(username).empty());
   User user(username, name, password, mail_addr, privilege);
-  users_.Insert(username, user);
+  users_.insert(username, user);
   return;
 }
 void UserSystem::Login(const string& username, const string& password) {
@@ -27,13 +27,13 @@ void UserSystem::Logout(const string& username) {
   return;
 }
 User UserSystem::QueryProfile(const string& username) {
-  auto find_ret = users_.Find(username);
+  auto find_ret = users_.query(username);
   Assert(!find_ret.empty(), "query profile fail: not found");
   return find_ret[0];
 }
 void UserSystem::ModifyProfile(const User& ori_val, const User& new_val) {
-  users_.Erase(ori_val.username, ori_val);
-  users_.Insert(new_val.username, new_val);
+  users_.erase(ori_val.username, ori_val);
+  users_.insert(new_val.username, new_val);
 }
 bool UserSystem::IsOnline(const string& username) { return online_status_.count(username); }
 UserSystem::~UserSystem() = default;

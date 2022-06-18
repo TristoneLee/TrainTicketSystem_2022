@@ -14,23 +14,62 @@ Train::Train(const string& _train_id, int _station_num, const vector<string>& _s
     : train_id(_train_id),
       station_num(_station_num),
       seat_num(_seat_num),
+      start_time(_start_time),
       sale_date(_sale_date[0]),
       sale_duration(_sale_date[1] - _sale_date[0] + 1),
       type(_type),
       released(_released) {
-  for (int i = 0; i < station_num - 2; ++i) {
-    station_list[i] = _station_list[i];
-    price_list[i] = _price_list[i];
-    travel_time_list[i] = _travel_time_list[i];
-    stopover_time_list[i] = _stopover_time_list[i];
+  for (int i = 0; i < station_num; ++i) station_list[i] = _station_list[i];
+  price_prefix[0] = 0;
+  for (int i = 1; i < station_num; ++i) price_prefix[i] = price_prefix[i - 1] + _price_list[i - 1];
+  arriving_time[0] = -1;  // meaningless
+  leaving_time[0] = 0;    // the leaving time of the first station is start_time;
+  for (int i = 1; i < station_num - 1; ++i) {
+    arriving_time[i] = leaving_time[i - 1] + _travel_time_list[i - 1];
+    leaving_time[i] = arriving_time[i] + _stopover_time_list[i - 1];
   }
-  station_list[station_num - 2] = _station_list[station_num - 2];
-  station_list[station_num - 1] = _station_list[station_num - 1];
-  price_list[station_num - 2] = _price_list[station_num - 2];
-  travel_time_list[station_num - 2] = _travel_time_list[station_num - 2];
+  arriving_time[station_num - 1] = leaving_time[station_num - 2] + _travel_time_list[station_num - 2];
   return;
 }
+Train::Train(const Train& other) = default;
 Train& Train::operator=(const Train& other) = default;
+int Train::GetPrice(int depart_idx, int terminal_idx) const {
+  return price_prefix[terminal_idx] - price_prefix[depart_idx];
+}
+int Train::FindStation(const Station& station_name) const {
+  for (int idx; idx < station_num; ++idx)
+    if (station_list[idx] == station_name) return idx;
+  return NIDX;
+}
+
+Time Train::LeavingTime(int station_idx, int idx) const {
+  Time ret = start_time + leaving_time[station_idx];
+  if (idx) ret.date += idx;
+  return ret;
+}
+Time Train::ArrivingTime(int station_idx, int idx) const {
+  Time ret = start_time + arriving_time[station_idx];
+  if (idx) ret.date += idx;
+  return ret;
+}
+int Train::FindLeavingTrain(int station_idx, const Date& date) const {
+  Time start_leaving_time = LeavingTime(station_idx);
+  int ret = date - start_leaving_time.date;
+  if (ret < 0 || ret >= sale_duration) return NIDX;
+  return ret;
+}
+int Train::FindLeavingTrainAfter(int station_idx, const Time& time) const {
+  Time start_leaving_time = LeavingTime(station_idx);
+  if (time < start_leaving_time) return 0;  // wait for sale begin
+  int ret = time.date - start_leaving_time.date;
+  Time now_leaving_time = start_leaving_time + ret;
+  if (now_leaving_time < time) ++ret;
+  if (ret >= sale_duration) return NIDX;
+  return ret;
+}
+int Train::GetTravelTime(int depart_idx, int arrive_idx) const {
+  return arriving_time[arrive_idx] - leaving_time[depart_idx];
+}
 Train::~Train() = default;
 }  // namespace sjtu
 #endif  // TRAINTICKETSYSTEM_2022_SRC_DATA_TRAIN_CPP

@@ -1,18 +1,18 @@
 #ifndef TRAINTICKETSYSTEM_2022_SRC_SYSTEMS_TICKET_SYSTEM_H
 #define TRAINTICKETSYSTEM_2022_SRC_SYSTEMS_TICKET_SYSTEM_H
-#include "cmd_scanner.h"
-#include "user_system.h"
+#include "database.h"
+#include "seats.h"
+#include "train_index.h"
 namespace sjtu {
 class TicketSystem {
  private:
-  UserSystem user_system;
-  void JudgeOnline(const Command& cmd);  // dont check add_user for special reasons
-  bool CheckFirst();
+  bpTree<TrainIndex, Seats> seats_;
 
  public:
   TicketSystem();
+  void ReleaseSeats(const TrainID& train_id, int total_seat, int sale_duration);
+  Seats QuerySeats(const TrainID& train_id, int idx);
   ~TicketSystem();
-  void Work();
 };
 }  // namespace sjtu
 #endif  // TRAINTICKETSYSTEM_2022_SRC_SYSTEMS_TICKET_SYSTEM_H

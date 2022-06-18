@@ -1,6 +1,7 @@
 #ifndef TRAINTICKETSYSTEM_2022_SRC_TOOLS_TIMES_H
 #define TRAINTICKETSYSTEM_2022_SRC_TOOLS_TIMES_H
 #include <iostream>
+using std::ostream;
 using std::string;
 namespace sjtu {
 class Date {
@@ -38,7 +39,7 @@ class Time {
   Date date;
   int hour, minute;
   Time(int _hour = 0, int _minute = 0, const Date& _day = Date());
-  Time(const string& input);
+  Time(const string& input, const Date& _day = Date());
   Time(const Time& other);
   Time& operator=(const Time& other);
   bool operator==(const Time& other) const;
@@ -53,6 +54,7 @@ class Time {
   Time& operator-=(int minutes);
   int operator-(const Time& other) const;
   string ToString() const;
+  friend ostream& operator<<(ostream& os, const Time& time);
   ~Time();
 };
 }  // namespace sjtu

@@ -5,13 +5,13 @@
 #pragma region Done
 template <class KeyType, class ValueType, class ValueIndexType, class HashFunc,
           class IndexCompare, class KeyCompare, class IndexLess>
-FileMap<KeyType, ValueType, ValueIndexType, HashFunc, IndexCompare, KeyCompare,
+bpTree<KeyType, ValueType, ValueIndexType, HashFunc, IndexCompare, KeyCompare,
         IndexLess>::Node::Node()
     : size(0), is_leaf(true) {}
 
 template <class KeyType, class ValueType, class ValueIndexType, class HashFunc,
           class IndexCompare, class KeyCompare, class IndexLess>
-FileMap<KeyType, ValueType, ValueIndexType, HashFunc, IndexCompare, KeyCompare,
+bpTree<KeyType, ValueType, ValueIndexType, HashFunc, IndexCompare, KeyCompare,
         IndexLess>::Node::Node(const FilePtr<Node> &_self)
     : Node() {
   self = _self;
@@ -19,7 +19,7 @@ FileMap<KeyType, ValueType, ValueIndexType, HashFunc, IndexCompare, KeyCompare,
 
 template <class KeyType, class ValueType, class ValueIndexType, class HashFunc,
           class IndexCompare, class KeyCompare, class IndexLess>
-void FileMap<KeyType, ValueType, ValueIndexType, HashFunc, IndexCompare,
+void bpTree<KeyType, ValueType, ValueIndexType, HashFunc, IndexCompare,
              KeyCompare, IndexLess>::Node::BecomeParent(Node &lchild,
                                                         Node &rchild) {
   if (size) throw("A non-empty Node became the parent of other Nodes");
@@ -36,7 +36,7 @@ void FileMap<KeyType, ValueType, ValueIndexType, HashFunc, IndexCompare,
 
 template <class KeyType, class ValueType, class ValueIndexType, class HashFunc,
           class IndexCompare, class KeyCompare, class IndexLess>
-void FileMap<KeyType, ValueType, ValueIndexType, HashFunc, IndexCompare,
+void bpTree<KeyType, ValueType, ValueIndexType, HashFunc, IndexCompare,
              KeyCompare, IndexLess>::Node::InsertCtx(const IndexType &tmp_index,
                                                      const FilePtr<ValueType>
                                                          &value) {
@@ -47,7 +47,7 @@ void FileMap<KeyType, ValueType, ValueIndexType, HashFunc, IndexCompare,
 
 template <class KeyType, class ValueType, class ValueIndexType, class HashFunc,
           class IndexCompare, class KeyCompare, class IndexLess>
-void FileMap<KeyType, ValueType, ValueIndexType, HashFunc, IndexCompare,
+void bpTree<KeyType, ValueType, ValueIndexType, HashFunc, IndexCompare,
              KeyCompare, IndexLess>::Node::InsertCtx(const IndexType &tmp_index,
                                                      const FilePtr<ValueType>
                                                          &value,
@@ -61,7 +61,7 @@ void FileMap<KeyType, ValueType, ValueIndexType, HashFunc, IndexCompare,
 
 template <class KeyType, class ValueType, class ValueIndexType, class HashFunc,
           class IndexCompare, class KeyCompare, class IndexLess>
-int FileMap<KeyType, ValueType, ValueIndexType, HashFunc, IndexCompare,
+int bpTree<KeyType, ValueType, ValueIndexType, HashFunc, IndexCompare,
             KeyCompare, IndexLess>::Node::InsertNode(Node &obj) {
   int pos = LowerBound(obj.index[0]);
   InsertNode(obj, pos);
@@ -70,7 +70,7 @@ int FileMap<KeyType, ValueType, ValueIndexType, HashFunc, IndexCompare,
 
 template <class KeyType, class ValueType, class ValueIndexType, class HashFunc,
           class IndexCompare, class KeyCompare, class IndexLess>
-void FileMap<KeyType, ValueType, ValueIndexType, HashFunc, IndexCompare,
+void bpTree<KeyType, ValueType, ValueIndexType, HashFunc, IndexCompare,
              KeyCompare, IndexLess>::Node::InsertNode(Node &obj, int pos) {
   // if (pos == size) {
   //   if (nxt) {
@@ -92,7 +92,7 @@ void FileMap<KeyType, ValueType, ValueIndexType, HashFunc, IndexCompare,
 
 template <class KeyType, class ValueType, class ValueIndexType, class HashFunc,
           class IndexCompare, class KeyCompare, class IndexLess>
-void FileMap<KeyType, ValueType, ValueIndexType, HashFunc, IndexCompare,
+void bpTree<KeyType, ValueType, ValueIndexType, HashFunc, IndexCompare,
              KeyCompare, IndexLess>::Node::Move(int lpos, int rpos) {
   if (lpos > rpos) std::swap(lpos, rpos);
   if (rpos > size) throw("Invaild Move");
@@ -107,7 +107,7 @@ void FileMap<KeyType, ValueType, ValueIndexType, HashFunc, IndexCompare,
 
 /* template <class KeyType, class ValueType, class ValueIndexType, class
 HashFunc, class IndexCompare, class KeyCompare, class IndexLess> int
-FileMap<KeyType, ValueType, ValueIndexType, HashFunc, IndexCompare, KeyCompare,
+bpTree<KeyType, ValueType, ValueIndexType, HashFunc, IndexCompare, KeyCompare,
 IndexLess>::Node::LowerBound(const KeyType &key, const ValueType &value) {
   IndexType tmp_index = std::make_pair(key, HashFunc()(value));
   return std::lower_bound(index, index + size, tmp_index, IndexLess()) - index;
@@ -115,7 +115,7 @@ IndexLess>::Node::LowerBound(const KeyType &key, const ValueType &value) {
 
 template <class KeyType, class ValueType, class ValueIndexType, class HashFunc,
           class IndexCompare, class KeyCompare, class IndexLess>
-int FileMap<KeyType, ValueType, ValueIndexType, HashFunc, IndexCompare,
+int bpTree<KeyType, ValueType, ValueIndexType, HashFunc, IndexCompare,
             KeyCompare, IndexLess>::Node::LowerBound(const IndexType
                                                          &tmp_index) {
   return std::lower_bound(index, index + size, tmp_index, IndexLess()) - index;
@@ -123,7 +123,7 @@ int FileMap<KeyType, ValueType, ValueIndexType, HashFunc, IndexCompare,
 
 template <class KeyType, class ValueType, class ValueIndexType, class HashFunc,
           class IndexCompare, class KeyCompare, class IndexLess>
-int FileMap<KeyType, ValueType, ValueIndexType, HashFunc, IndexCompare,
+int bpTree<KeyType, ValueType, ValueIndexType, HashFunc, IndexCompare,
             KeyCompare, IndexLess>::Node::LowerBound(const KeyType &key) {
   IndexType tmp_index;
   tmp_index.first = key;
@@ -133,7 +133,7 @@ int FileMap<KeyType, ValueType, ValueIndexType, HashFunc, IndexCompare,
 
 template <class KeyType, class ValueType, class ValueIndexType, class HashFunc,
           class IndexCompare, class KeyCompare, class IndexLess>
-void FileMap<KeyType, ValueType, ValueIndexType, HashFunc, IndexCompare,
+void bpTree<KeyType, ValueType, ValueIndexType, HashFunc, IndexCompare,
              KeyCompare, IndexLess>::Node::HalfSpilt(Node &ans) {
   ans.size = size >> 1;
   size = size - (size >> 1);
