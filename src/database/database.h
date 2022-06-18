@@ -683,7 +683,7 @@ namespace sjtu {
         }
         for (int i = posInArray; i < curArray.arraySiz; ++i) {
             storagePair pair;
-            if (curArray.data[i].keyOf() == key) {
+            if (!keyCompare(curArray.data[i].keyOf(),key)&&!keyCompare(key,curArray.data[i].keyOf())) {
                 storageDocument.read(pair, curArray.data[i].pos);
                 ans.push_back(pair.valueOf());
             } else {
@@ -696,7 +696,7 @@ namespace sjtu {
             arrayDocument.read(curArray, curArray.next);
             storagePair pair;
             for (int i = 0; i < curArray.arraySiz; ++i) {
-                if (curArray.data[i].keyOf() == key) {
+                if (!keyCompare(curArray.data[i].keyOf(),key)&&!keyCompare(key,curArray.data[i].keyOf())) {
                     storageDocument.read(pair, curArray.data[i].pos);
                     ans.push_back(pair.valueOf());
                 } else {
