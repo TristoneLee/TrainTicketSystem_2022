@@ -104,7 +104,7 @@ TransferTrip TrainSystem::QueryTransfer(const string& depart_station, const stri
     Train dep_train = trains_.Find(depart_station_pass[idx_dep].train_id).front();
     const int& depart_station_idx = depart_station_pass[idx_dep].idx;
     // can be used to find whether the station is in the train and where it is
-    linked_hashmap<Station, int> station_idx_map;
+    linked_hashmap<Station, int, StationHash> station_idx_map;
     for (int i = depart_station_idx + 1; i < dep_train.station_num; ++i) station_idx_map[dep_train.station_list[i]] = i;
     int dep_train_idx = dep_train.FindLeavingTrain(depart_station_idx, date);
     if (dep_train_idx == Train::NIDX) continue;  // train is not on sale on date

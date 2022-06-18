@@ -119,5 +119,21 @@ using Name = Str<kNameLength>;
 using MailAddr = Str<kMailAddrLength>;
 using TrainID = Str<kTrainIDLength>;
 using Station = Str<kStationLength>;
+STR_TEMPLATE
+class StrHash {
+ public:
+  size_t operator()(const STR_CLASS& str) const {
+    size_t ret = 0;
+    for (int i = 0; i < str.Length(); ++i) ret = ret * 31 + str[i];
+    return ret;
+  }
+};
+
+using UserNameHash = StrHash<kUserNameLength>;
+using PassWordHash = StrHash<kPassWordLength>;
+using NameHash = StrHash<kNameLength>;
+using MailAddrHash = StrHash<kMailAddrLength>;
+using TrainIDHash = StrHash<kTrainIDLength>;
+using StationHash = StrHash<kStationLength>;
 }  // namespace sjtu
 #endif  // TRAINTICKETSYSTEM_2022_SRC_TOOLS_STR_HPP
