@@ -21,7 +21,7 @@ template <class KeyType, class ValueType, class ValueIndexType = int,
                                pair<KeyType, ValueIndexType>>,
           class KeyCompare = Comp::SingleComp<KeyType>,
           class IndexLess = std::less<pair<KeyType, ValueIndexType>>>
-class FileMap {
+class bpTree {
   typedef pair<KeyType, ValueIndexType> IndexType;
 
  private:
@@ -46,20 +46,20 @@ class FileMap {
   FilePtr<Node> root;
 
  public:
-  FileMap(const string& _file_name);
+  bpTree(const string& _file_name);
   void Print();
-  void Insert(const KeyType& key, const ValueType& value);
-  std::vector<ValueType> Find(const KeyType& key);
+  void insert(const KeyType& key, const ValueType& value);
+  std::vector<ValueType> query(const KeyType& key);
   std::vector<ValueType> FindAll();
   // ValueType Find(const KeyType& key, const ValueIndexType index);
-  void Erase(const KeyType& key, const ValueType& value);
+  void erase(const KeyType& key, const ValueType& value);
 };
 
 template <class KeyType, class ValueType, class ValueIndexType, class HashFunc,
           class IndexCompare, class KeyCompare, class IndexLess>
-class FileMap<KeyType, ValueType, ValueIndexType, HashFunc, IndexCompare,
+class bpTree<KeyType, ValueType, ValueIndexType, HashFunc, IndexCompare,
               KeyCompare, IndexLess>::Node {
-  friend class FileMap<KeyType, ValueType, ValueIndexType, HashFunc,
+  friend class bpTree<KeyType, ValueType, ValueIndexType, HashFunc,
                        IndexCompare, KeyCompare, IndexLess>;
 
  private:

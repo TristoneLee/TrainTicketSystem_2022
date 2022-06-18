@@ -8,25 +8,25 @@
 #pragma region done
 template <class KeyType, class ValueType, class ValueIndexType, class HashFunc,
           class IndexCompare, class KeyCompare, class IndexLess>
-void FileMap<KeyType, ValueType, ValueIndexType, HashFunc, IndexCompare,
+void bpTree<KeyType, ValueType, ValueIndexType, HashFunc, IndexCompare,
              KeyCompare, IndexLess>::Load() {
-  node_file.fread(FilePtr<FileMap<KeyType, ValueType, ValueIndexType, HashFunc,
+  node_file.fread(FilePtr<bpTree<KeyType, ValueType, ValueIndexType, HashFunc,
                                   IndexCompare, KeyCompare, IndexLess>>(0),
                   *this);
 }
 
 template <class KeyType, class ValueType, class ValueIndexType, class HashFunc,
           class IndexCompare, class KeyCompare, class IndexLess>
-void FileMap<KeyType, ValueType, ValueIndexType, HashFunc, IndexCompare,
+void bpTree<KeyType, ValueType, ValueIndexType, HashFunc, IndexCompare,
              KeyCompare, IndexLess>::Init() {
   node_file.fnew(*this);
 }
 
 template <class KeyType, class ValueType, class ValueIndexType, class HashFunc,
           class IndexCompare, class KeyCompare, class IndexLess>
-void FileMap<KeyType, ValueType, ValueIndexType, HashFunc, IndexCompare,
+void bpTree<KeyType, ValueType, ValueIndexType, HashFunc, IndexCompare,
              KeyCompare, IndexLess>::Save() {
-  node_file.modify(FilePtr<FileMap<KeyType, ValueType, ValueIndexType, HashFunc,
+  node_file.modify(FilePtr<bpTree<KeyType, ValueType, ValueIndexType, HashFunc,
                                    IndexCompare, KeyCompare, IndexLess>>(0),
                    *this);
   return;
@@ -34,7 +34,7 @@ void FileMap<KeyType, ValueType, ValueIndexType, HashFunc, IndexCompare,
 
 template <class KeyType, class ValueType, class ValueIndexType, class HashFunc,
           class IndexCompare, class KeyCompare, class IndexLess>
-void FileMap<KeyType, ValueType, ValueIndexType, HashFunc, IndexCompare,
+void bpTree<KeyType, ValueType, ValueIndexType, HashFunc, IndexCompare,
              KeyCompare, IndexLess>::Print() {
   DFSPrint(root);
   return;
@@ -42,7 +42,7 @@ void FileMap<KeyType, ValueType, ValueIndexType, HashFunc, IndexCompare,
 
 template <class KeyType, class ValueType, class ValueIndexType, class HashFunc,
           class IndexCompare, class KeyCompare, class IndexLess>
-void FileMap<KeyType, ValueType, ValueIndexType, HashFunc, IndexCompare,
+void bpTree<KeyType, ValueType, ValueIndexType, HashFunc, IndexCompare,
              KeyCompare, IndexLess>::DFSPrint(FilePtr<Node> now) {
   static string tmptab = "";
   Node now_node(now);
@@ -81,9 +81,9 @@ void FileMap<KeyType, ValueType, ValueIndexType, HashFunc, IndexCompare,
 
 template <class KeyType, class ValueType, class ValueIndexType, class HashFunc,
           class IndexCompare, class KeyCompare, class IndexLess>
-typename FileMap<KeyType, ValueType, ValueIndexType, HashFunc, IndexCompare,
+typename bpTree<KeyType, ValueType, ValueIndexType, HashFunc, IndexCompare,
                  KeyCompare, IndexLess>::Node
-FileMap<KeyType, ValueType, ValueIndexType, HashFunc, IndexCompare, KeyCompare,
+bpTree<KeyType, ValueType, ValueIndexType, HashFunc, IndexCompare, KeyCompare,
         IndexLess>::CreatNode() {
   Node ans;
   ans.self = node_file.fnew(ans);
@@ -93,7 +93,7 @@ FileMap<KeyType, ValueType, ValueIndexType, HashFunc, IndexCompare, KeyCompare,
 
 template <class KeyType, class ValueType, class ValueIndexType, class HashFunc,
           class IndexCompare, class KeyCompare, class IndexLess>
-void FileMap<KeyType, ValueType, ValueIndexType, HashFunc, IndexCompare,
+void bpTree<KeyType, ValueType, ValueIndexType, HashFunc, IndexCompare,
              KeyCompare, IndexLess>::StoreNode(Node& obj) {
   if (obj.self) throw("Store a existing Node");
   obj.self = node_file.fnew(obj);
@@ -103,7 +103,7 @@ void FileMap<KeyType, ValueType, ValueIndexType, HashFunc, IndexCompare,
 
 template <class KeyType, class ValueType, class ValueIndexType, class HashFunc,
           class IndexCompare, class KeyCompare, class IndexLess>
-void FileMap<KeyType, ValueType, ValueIndexType, HashFunc, IndexCompare,
+void bpTree<KeyType, ValueType, ValueIndexType, HashFunc, IndexCompare,
              KeyCompare, IndexLess>::LoadNode(Node& obj) const {
   if (!obj.self) throw("Load a non-existing Node");
   obj = node_file.fread(obj.self);
@@ -112,7 +112,7 @@ void FileMap<KeyType, ValueType, ValueIndexType, HashFunc, IndexCompare,
 
 template <class KeyType, class ValueType, class ValueIndexType, class HashFunc,
           class IndexCompare, class KeyCompare, class IndexLess>
-void FileMap<KeyType, ValueType, ValueIndexType, HashFunc, IndexCompare,
+void bpTree<KeyType, ValueType, ValueIndexType, HashFunc, IndexCompare,
              KeyCompare, IndexLess>::UpdateNode(const Node& obj) {
   if (!obj.self) throw(obj.self.Get_Pos());
   if (!obj.self) throw("Update a non-existing Node");
@@ -123,15 +123,15 @@ void FileMap<KeyType, ValueType, ValueIndexType, HashFunc, IndexCompare,
 template <class KeyType, class ValueType, class ValueIndexType, class HashFunc,
           class IndexCompare, class KeyCompare, class IndexLess>
 ValueType
-FileMap<KeyType, ValueType, ValueIndexType, HashFunc, IndexCompare, KeyCompare,
+bpTree<KeyType, ValueType, ValueIndexType, HashFunc, IndexCompare, KeyCompare,
         IndexLess>::GetValue(const FilePtr<ValueType>& ptr) {
   return ctx_file.fread(ptr);
 }
 
 template <class KeyType, class ValueType, class ValueIndexType, class HashFunc,
           class IndexCompare, class KeyCompare, class IndexLess>
-FileMap<KeyType, ValueType, ValueIndexType, HashFunc, IndexCompare, KeyCompare,
-        IndexLess>::FileMap(const string& _file_name)
+bpTree<KeyType, ValueType, ValueIndexType, HashFunc, IndexCompare, KeyCompare,
+        IndexLess>::bpTree(const string& _file_name)
     : node_file(_file_name + "_node"), ctx_file(_file_name + "_ctx") {
   if (node_file.Empty())
     Init();
@@ -142,7 +142,7 @@ FileMap<KeyType, ValueType, ValueIndexType, HashFunc, IndexCompare, KeyCompare,
 
 template <class KeyType, class ValueType, class ValueIndexType, class HashFunc,
           class IndexCompare, class KeyCompare, class IndexLess>
-void FileMap<KeyType, ValueType, ValueIndexType, HashFunc, IndexCompare,
+void bpTree<KeyType, ValueType, ValueIndexType, HashFunc, IndexCompare,
              KeyCompare, IndexLess>::SplitRoot() {
   Node root_node(root);
   LoadNode(root_node);
@@ -161,8 +161,8 @@ void FileMap<KeyType, ValueType, ValueIndexType, HashFunc, IndexCompare,
 
 template <class KeyType, class ValueType, class ValueIndexType, class HashFunc,
           class IndexCompare, class KeyCompare, class IndexLess>
-void FileMap<KeyType, ValueType, ValueIndexType, HashFunc, IndexCompare,
-             KeyCompare, IndexLess>::Insert(const KeyType& key,
+void bpTree<KeyType, ValueType, ValueIndexType, HashFunc, IndexCompare,
+             KeyCompare, IndexLess>::insert(const KeyType& key,
                                             const ValueType& value) {
   auto ctx_ptr = ctx_file.fnew(value);
   if (!root) {
@@ -185,7 +185,7 @@ void FileMap<KeyType, ValueType, ValueIndexType, HashFunc, IndexCompare,
 // #pragma endregion
 template <class KeyType, class ValueType, class ValueIndexType, class HashFunc,
           class IndexCompare, class KeyCompare, class IndexLess>
-void FileMap<KeyType, ValueType, ValueIndexType, HashFunc, IndexCompare,
+void bpTree<KeyType, ValueType, ValueIndexType, HashFunc, IndexCompare,
              KeyCompare, IndexLess>::DFSInsert(const IndexType& tmp_index,
                                                const FilePtr<ValueType>& value,
                                                Node& now_node) {
@@ -214,8 +214,8 @@ void FileMap<KeyType, ValueType, ValueIndexType, HashFunc, IndexCompare,
 template <class KeyType, class ValueType, class ValueIndexType, class HashFunc,
           class IndexCompare, class KeyCompare, class IndexLess>
 vector<ValueType>
-FileMap<KeyType, ValueType, ValueIndexType, HashFunc, IndexCompare, KeyCompare,
-        IndexLess>::Find(const KeyType& key) {
+bpTree<KeyType, ValueType, ValueIndexType, HashFunc, IndexCompare, KeyCompare,
+        IndexLess>::query(const KeyType& key) {
   vector<ValueType> ans;
   if (!root) return ans;
   Node root_node(root);
@@ -226,7 +226,7 @@ FileMap<KeyType, ValueType, ValueIndexType, HashFunc, IndexCompare, KeyCompare,
 
 template <class KeyType, class ValueType, class ValueIndexType, class HashFunc,
           class IndexCompare, class KeyCompare, class IndexLess>
-void FileMap<KeyType, ValueType, ValueIndexType, HashFunc, IndexCompare,
+void bpTree<KeyType, ValueType, ValueIndexType, HashFunc, IndexCompare,
              KeyCompare, IndexLess>::DFSFind(const KeyType& key, Node& now_node,
                                              vector<ValueType>& ans) {
   if (now_node.is_leaf) {
@@ -252,8 +252,8 @@ void FileMap<KeyType, ValueType, ValueIndexType, HashFunc, IndexCompare,
 }
 template <class KeyType, class ValueType, class ValueIndexType, class HashFunc,
           class IndexCompare, class KeyCompare, class IndexLess>
-void FileMap<KeyType, ValueType, ValueIndexType, HashFunc, IndexCompare,
-             KeyCompare, IndexLess>::Erase(const KeyType& key,
+void bpTree<KeyType, ValueType, ValueIndexType, HashFunc, IndexCompare,
+             KeyCompare, IndexLess>::erase(const KeyType& key,
                                            const ValueType& value) {
   IndexType tmp_index = std::make_pair(key, HashFunc()(value));
   if (!root) return;
@@ -263,7 +263,7 @@ void FileMap<KeyType, ValueType, ValueIndexType, HashFunc, IndexCompare,
 }
 template <class KeyType, class ValueType, class ValueIndexType, class HashFunc,
           class IndexCompare, class KeyCompare, class IndexLess>
-void FileMap<KeyType, ValueType, ValueIndexType, HashFunc, IndexCompare,
+void bpTree<KeyType, ValueType, ValueIndexType, HashFunc, IndexCompare,
              KeyCompare, IndexLess>::DFSErase(const IndexType& tmp_index,
                                               Node& now_node) {
   if (now_node.is_leaf) {
@@ -291,7 +291,7 @@ void FileMap<KeyType, ValueType, ValueIndexType, HashFunc, IndexCompare,
 }
 template <class KeyType, class ValueType, class ValueIndexType, class HashFunc,
           class IndexCompare, class KeyCompare, class IndexLess>
-vector<ValueType> FileMap<KeyType, ValueType, ValueIndexType, HashFunc,
+vector<ValueType> bpTree<KeyType, ValueType, ValueIndexType, HashFunc,
                           IndexCompare, KeyCompare, IndexLess>::FindAll() {
   vector<ValueType> ans;
   if (!root) return ans;

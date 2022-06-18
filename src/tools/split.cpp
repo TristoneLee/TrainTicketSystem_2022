@@ -20,6 +20,7 @@ int ToInt(const string& str) {
 vector<string> SplitIntoStrings(const string& str) {
   // split a string into a vector of string by "|"
   vector<string> ret;
+  if (str == "_") return ret;
   string tmp;
   for (const char& c : str) {
     if (c == '|') {

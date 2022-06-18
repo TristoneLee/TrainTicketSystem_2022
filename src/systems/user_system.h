@@ -2,14 +2,14 @@
 #define TRAINTICKETSYSTEM_2022_SRC_SYSTEMS_USER_SYSTEM_H
 #include <iostream>
 using std::string;
-#include "BPTree.h"
+#include "database.h"
 #include "linked_hashmap.hpp"
 #include "user.h"
 namespace sjtu {
 class UserSystem {
  private:
   linked_hashmap<string, bool> online_status_;
-  FileMap<UserName, User> users_;
+  bpTree<UserName, User> users_;
 
  public:
   UserSystem();

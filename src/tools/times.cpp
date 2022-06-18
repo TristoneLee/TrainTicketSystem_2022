@@ -1,25 +1,20 @@
 #ifndef TRAINTICKETSYSTEM_2022_SRC_TOOLS_TIMES_CPP
 #define TRAINTICKETSYSTEM_2022_SRC_TOOLS_TIMES_CPP
+#include <asserts.h>
 #include <times.h>
 
-#include <asserts.h>
 #include <iostream>
 using std::string;
 namespace sjtu {
-const int Date::kDaysInMonth[] = {0,  31, 28, 31, 30, 31, 30,
-                                  31, 31, 30, 31, 30, 31};
-const int Date::kSumDaysInMonth[] = {0,   0,   31,  59,  90,  120, 151,
-                                     181, 212, 243, 273, 304, 334};
+const int Date::kDaysInMonth[] = {0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+const int Date::kSumDaysInMonth[] = {0, 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334};
 
 Date::Date(int _month, int _day) : month(_month), day(_day) {}
 Date::Date(const string& input)
-    : month((input[0] - '0') * 10 + (input[1] - '0')),
-      day((input[3] - '0') * 10 + (input[4] - '0')) {}
+    : month((input[0] - '0') * 10 + (input[1] - '0')), day((input[3] - '0') * 10 + (input[4] - '0')) {}
 Date::Date(const Date& other) = default;
 Date& Date::operator=(const Date& other) = default;
-bool Date::operator==(const Date& other) const {
-  return month == other.month && day == other.day;
-}
+bool Date::operator==(const Date& other) const { return month == other.month && day == other.day; }
 bool Date::operator!=(const Date& other) const { return !(*this == other); }
 bool Date::operator<(const Date& other) const {
   if (month != other.month) return month < other.month;
@@ -29,12 +24,8 @@ bool Date::operator>(const Date& other) const {
   if (month != other.month) return month > other.month;
   return day > other.day;
 }
-bool Date::operator<=(const Date& other) const {
-  return *this < other || *this == other;
-}
-bool Date::operator>=(const Date& other) const {
-  return *this > other || *this == other;
-}
+bool Date::operator<=(const Date& other) const { return *this < other || *this == other; }
+bool Date::operator>=(const Date& other) const { return *this > other || *this == other; }
 Date Date::operator+(int days) const {
   Date ret(*this);
   ret += days;
@@ -64,8 +55,7 @@ Date& Date::operator-=(int days) {
   return *this;
 }
 int Date::operator-(const Date& other) const {
-  return kSumDaysInMonth[month] + day -
-         (kSumDaysInMonth[other.month] + other.day);
+  return kSumDaysInMonth[month] + day - (kSumDaysInMonth[other.month] + other.day);
 }
 string Date::ToString() const {  // format : mm-dd
   string ret;
@@ -79,11 +69,9 @@ string Date::ToString() const {  // format : mm-dd
 }
 Date::~Date() = default;
 
-Time::Time(int _hour, int _minute, const Date& _day)
-    : date(_day), hour(_hour), minute(_minute) {}
-Time::Time(const string& input)
-    : hour((input[0] - '0') * 10 + (input[1] - '0')),
-      minute((input[3] - '0') * 10 + (input[4] - '0')) {}
+Time::Time(int _hour, int _minute, const Date& _day) : date(_day), hour(_hour), minute(_minute) {}
+Time::Time(const string& input, const Date& _day)
+    : hour((input[0] - '0') * 10 + (input[1] - '0')), minute((input[3] - '0') * 10 + (input[4] - '0')), date(_day) {}
 Time::Time(const Time& other) = default;
 Time& Time::operator=(const Time& other) = default;
 bool Time::operator==(const Time& other) const {
@@ -100,12 +88,8 @@ bool Time::operator>(const Time& other) const {
   if (hour != other.hour) return hour > other.hour;
   return minute > other.minute;
 }
-bool Time::operator<=(const Time& other) const {
-  return *this < other || *this == other;
-}
-bool Time::operator>=(const Time& other) const {
-  return *this > other || *this == other;
-}
+bool Time::operator<=(const Time& other) const { return *this < other || *this == other; }
+bool Time::operator>=(const Time& other) const { return *this > other || *this == other; }
 Time Time::operator+(int minutes) const {
   Time ret(*this);
   ret += minutes;
@@ -139,8 +123,8 @@ Time& Time::operator-=(int minutes) {
   return *this;
 }
 int Time::operator-(const Time& other) const {
-  return (date - other.date) * kHoursInDay * kMinutesInHour +
-         (hour - other.hour) * kMinutesInHour + minute - other.minute;
+  return (date - other.date) * kHoursInDay * kMinutesInHour + (hour - other.hour) * kMinutesInHour + minute -
+         other.minute;
 }
 string Time::ToString() const {  // only output the time hh:mm
   string ret;
@@ -151,6 +135,11 @@ string Time::ToString() const {  // only output the time hh:mm
   ret.push_back('0' + minute / 10);
   ret.push_back('0' + minute % 10);
   return ret;
+}
+
+ostream& operator<<(ostream& os, const Time& time) {
+  os << time.date.ToString() << ' ' << time.ToString();
+  return os;
 }
 Time::~Time() = default;
 }  // namespace sjtu
