@@ -7,7 +7,6 @@
 #include <vector>
 #include "vector.hpp"
 #include "defaultHash.h"
-#include "rollback.h"
 
 using std::fstream;
 using std::cout;
@@ -26,7 +25,7 @@ namespace sjtu {
     public:
         iofile() = default;
 
-        explicit iofile(const std::string &_file_name) : file_name(_file_name+".dat") {
+        explicit iofile(const std::string &_file_name) : file_name(_file_name + ".dat") {
             file.open(file_name);
             if (file) {
                 file.seekg(0);
@@ -42,10 +41,10 @@ namespace sjtu {
         }
 
 
-        ~iofile(){
+        ~iofile() {
             file.open(file_name);
             file.seekp(0);
-            file.write(reinterpret_cast<char*>(&count),sizeof(int));
+            file.write(reinterpret_cast<char *>(&count), sizeof(int));
             file.close();
         }
 
@@ -308,11 +307,11 @@ namespace sjtu {
 
         void valueUpdate(iterator iter, Value newValue);
 
+        Value dirRead(int pos);
+
         iterator find(Key key);
 
         iterator begin();
-
-        Value dirRead(int pos);
 
     };
 
@@ -339,7 +338,7 @@ namespace sjtu {
     bpTree<Key, Value, HashType, HashFunc, KeyCompare, HashCompare>::bpTree(std::string name)
             :root(), nodeDocument(name + "nodeDocument"), arrayDocument(name + "arrayDocument"),
              storageDocument(name + "storageDocument") {
-        basicData.open(name + "basicData"+".dat");
+        basicData.open(name + "basicData" + ".dat");
         if (basicData) {
             basicData.seekg(0);
             basicData.read(reinterpret_cast<char *>(&siz), sizeof(int));
@@ -351,7 +350,7 @@ namespace sjtu {
             nodeDocument.read(root, locOfRoot);
         } else {
             basicData.clear();
-            basicData.open(name + "basicData"+".dat", fstream::out);
+            basicData.open(name + "basicData" + ".dat", fstream::out);
             basicData.close();
             siz = 0;
             head = 0;
@@ -428,7 +427,6 @@ namespace sjtu {
         arrayDocument.read(curArray, curNode.children[posInNode]);
         int posInArray = binarySearch(curArray.data, 0, curArray.arraySiz, obj);
         if (curArray.data[posInArray] != obj) return false;
-        storageDocument.Delete(curArray.data[posInArray].pos);
         for (int i = posInArray; i <= curArray.arraySiz - 2; ++i) curArray.data[i] = curArray.data[i + 1];
         if (posInArray == 0 && posInNode != 0) curNode.indexes[posInNode - 1] = curArray.data[0];
         else if (posInNode == 0 && posInArray == 0)indexUpdate(curNode, curArray.data[0]);
@@ -472,7 +470,7 @@ namespace sjtu {
     void bpTree<Key, Value, HashType, HashFunc, KeyCompare, HashCompare>::nodeSplit(bpNode &curNode) {
         if (curNode.loc == root.loc) {
             bpNode newNode;
-            newNode.isLeaf = curNode.isLeaf = true;
+            newNode.isLeaf = curNode.isLeaf;
             newNode.nodeSiz = MIN_KEY;
             curNode.nodeSiz = MIN_KEY;
             for (int i = 0; i < MIN_KEY; ++i) newNode.indexes[i] = curNode.indexes[i + MIN_KEY + 1];
@@ -638,26 +636,26 @@ namespace sjtu {
                     if (faNode.loc == root.loc) root = faNode;
                     else nodeDocument.update(faNode, faNode.loc);
                     return;
-                }
-            } else {
-                bpNode preNode;
-                nodeDocument.read(preNode, faNode.children[posInNode - 1]);
-                if (preNode.nodeSiz > MIN_KEY) {
-                    ++curNode.nodeSiz;
-                    for (int i = curNode.nodeSiz; i > 0; --i) curNode.children[i] = curNode.children[i - 1];
-                    curNode.children[0] = preNode.children[preNode.nodeSiz];
-                    --preNode.nodeSiz;
-                    for (int i = curNode.nodeSiz - 1; i > 0; --i) curNode.indexes[i] = curNode.indexes[i - 1];
-                    curNode.indexes[0] = faNode.indexes[posInNode - 1];
-                    faNode.indexes[posInNode - 1] = preNode.indexes[preNode.nodeSiz];
-                    nodeDocument.update(curNode, curNode.loc);
-                    nodeDocument.update(preNode, preNode.loc);
-                    if (faNode.loc == root.loc) root = faNode;
-                    else nodeDocument.update(faNode, faNode.loc);
-                    return;
                 } else {
-                    nodeMerge(preNode, curNode, faNode, posInNode - 1);
-                    if (faNode.nodeSiz < MIN_KEY) nodeAdoption(faNode);
+                    bpNode preNode;
+                    nodeDocument.read(preNode, faNode.children[posInNode - 1]);
+                    if (preNode.nodeSiz > MIN_KEY) {
+                        ++curNode.nodeSiz;
+                        for (int i = curNode.nodeSiz; i > 0; --i) curNode.children[i] = curNode.children[i - 1];
+                        curNode.children[0] = preNode.children[preNode.nodeSiz];
+                        --preNode.nodeSiz;
+                        for (int i = curNode.nodeSiz - 1; i > 0; --i) curNode.indexes[i] = curNode.indexes[i - 1];
+                        curNode.indexes[0] = faNode.indexes[posInNode - 1];
+                        faNode.indexes[posInNode - 1] = preNode.indexes[preNode.nodeSiz];
+                        nodeDocument.update(curNode, curNode.loc);
+                        nodeDocument.update(preNode, preNode.loc);
+                        if (faNode.loc == root.loc) root = faNode;
+                        else nodeDocument.update(faNode, faNode.loc);
+                        return;
+                    } else {
+                        nodeMerge(preNode, curNode, faNode, posInNode - 1);
+                        if (faNode.nodeSiz < MIN_KEY) nodeAdoption(faNode);
+                    }
                 }
             }
         }
@@ -678,16 +676,15 @@ namespace sjtu {
         bool flag = true;
         int posInArray = binarySearch(curArray.data, 0, curArray.arraySiz, key);
         if (posInArray == curArray.arraySiz) {
-            if(curArray.next!=0) {
+            if (curArray.next != 0) {
                 arrayDocument.read(curArray, curArray.next);
                 ++posInNode;
                 posInArray = binarySearch(curArray.data, 0, curArray.arraySiz, key);
-            }
-            else return ans;
+            } else return ans;
         }
         for (int i = posInArray; i < curArray.arraySiz; ++i) {
             storagePair pair;
-            if (!keyCompare(curArray.data[i].keyOf(),key)&&!keyCompare(key,curArray.data[i].keyOf())) {
+            if (!keyCompare(curArray.data[i].keyOf(), key) && !keyCompare(key, curArray.data[i].keyOf())) {
 //            if (curArray.data[i].keyOf()==key) {
                 storageDocument.read(pair, curArray.data[i].pos);
                 ans.push_back(pair.valueOf());
@@ -701,7 +698,7 @@ namespace sjtu {
             arrayDocument.read(curArray, curArray.next);
             storagePair pair;
             for (int i = 0; i < curArray.arraySiz; ++i) {
-                if (!keyCompare(curArray.data[i].keyOf(),key)&&!keyCompare(key,curArray.data[i].keyOf())) {
+                if (!keyCompare(curArray.data[i].keyOf(), key) && !keyCompare(key, curArray.data[i].keyOf())) {
 //                if (curArray.data[i].keyOf()==key) {
                     storageDocument.read(pair, curArray.data[i].pos);
                     ans.push_back(pair.valueOf());
@@ -867,10 +864,9 @@ namespace sjtu {
     template<class Key, class Value, class HashType, class HashFunc, class KeyCompare, class HashCompare>
     Value bpTree<Key, Value, HashType, HashFunc, KeyCompare, HashCompare>::dirRead(int pos) {
         Value result;
-        storageDocument.read(result,pos);
+        storageDocument.read(result, pos);
         return result;
     }
-
 }
 
 
