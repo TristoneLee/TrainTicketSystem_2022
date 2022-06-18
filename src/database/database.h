@@ -7,6 +7,7 @@
 #include <vector>
 #include "vector.hpp"
 #include "defaultHash.h"
+#include "rollback.h"
 
 using std::fstream;
 using std::cout;
@@ -249,99 +250,6 @@ namespace sjtu {
             }
         };
 
-        struct Log {
-            //时间戳
-            int time = 0;
-            //内存池内的位置
-            int obj = 0;
-            //操作类型 1 insert 2 delete 3 modify
-            int op = 0;
-            //如果操作是modify，原本的value值
-            int pos = 0;
-        };
-
-        static const int sizeOfValue = sizeof(Value);
-        static const int sizeOfLog = sizeof(Log);
-
-        class Rollback {
-            friend class bpTree;
-
-        private:
-            enum operation {
-                insert, erase, modify
-            };
-            fstream logFile;
-            fstream modStack;
-            string name;
-            int logSiz = 0;
-            int modSiz = 0;
-
-
-        public:
-            Rollback(string s) {
-                logFile.open(name + "Logfile.dat");
-                if (logFile) {
-                    logFile.seekg(0);
-                    logFile.read(reinterpret_cast<char *>(&logSiz), sizeof(int));
-                    logFile.close();
-                } else {
-                    logFile.clear();
-                    logFile.open(name + "Logfile.dat", std::fstream::out);
-                    logFile.seekp(0);
-                    logFile.write(reinterpret_cast<char *>(&logSiz), sizeof(int));
-                    logFile.close();
-                }
-                modStack.open(name + "ModStack.dat");
-                if (modStack) {
-                    modStack.seekg(0);
-                    modStack.read(reinterpret_cast<char *>(&logSiz), sizeof(int));
-                    modStack.close();
-                } else {
-                    modStack.clear();
-                    modStack.open(name + "ModStack.dat", std::fstream::out);
-                    modStack.seekp(0);
-                    modStack.write(reinterpret_cast<char *>(&modSiz), sizeof(int));
-                    modStack.close();
-                }
-            }
-
-            ~Rollback() {
-                modStack.open(name + "ModStack.dat");
-                modStack.seekp(0);
-                modStack.write(reinterpret_cast<char *>(&modSiz), sizeof(int));
-                modStack.close();
-                logFile.open(name + "Logfile.dat");
-                logFile.seekp(0);
-                logFile.write(reinterpret_cast<char *>(&logSiz), sizeof(int));
-                logFile.close();
-            }
-
-            void push(int time, int op, int obj) {
-                logFile.open(name + "Logfile.dat");
-                logFile.seekp(4 + logSiz * sizeOfLog);
-                Log tem{time, obj, op};
-                logFile.write(reinterpret_cast<char *>(&tem), sizeOfLog);
-                logFile.close();
-                ++logSiz;
-            }
-
-            void push(int time, int op, int obj, const Value &value) {
-                modStack.open(name + "ModStack.dat");
-                int pos = 4 + modSiz * sizeOfValue;
-                modStack.seekp(pos);
-                modStack.write(reinterpret_cast<char *>(&value), sizeOfValue);
-                modStack.close();
-                ++modSiz;
-                logFile.open(name + "Logfile.dat");
-                logFile.seekp(4 + logSiz * sizeOfLog);
-                Log tem{time, obj, op, pos};
-                logFile.write(reinterpret_cast<char *>(&tem), sizeOfLog);
-                logFile.close();
-                ++logSiz;
-            }
-        };
-
-
         bpNode root;
         iofile<array> arrayDocument;
         iofile<bpNode> nodeDocument;
@@ -353,7 +261,7 @@ namespace sjtu {
         static KeyCompare keyCompare;
         static HashCompare hashCompare;
         static HashFunc hashFunc;
-        Rollback rollback;
+        Rollback<Value> rollback;
         std::string filename;
 
 
@@ -509,7 +417,7 @@ namespace sjtu {
         if (curNode.loc != root.loc) nodeDocument.update(curNode, curNode.loc);
         else root = curNode;
         ++siz;
-        rollback.push(time, 1, valuePos);
+        if(time>0) rollback.push(time, 1, valuePos);
         if (curArray.arraySiz == MAX_DATA) arraySplit(curNode, curArray, posInNode);
         return valuePos;
     }
@@ -537,7 +445,7 @@ namespace sjtu {
         if (curNode.loc != root.loc) nodeDocument.update(curNode, curNode.loc);
         else root = curNode;
         --siz;
-        rollback.push(time, 2, curNode.children[posInNode]);
+        if(time>0)rollback.push(time, 2, curNode.children[posInNode]);
         if (curArray.arraySiz < MIN_DATA) arrayAdoption(curNode, curArray, posInNode);
         return true;
     }
@@ -988,7 +896,7 @@ namespace sjtu {
         iter.master->arrayDocument.read(tem, iter.pos);
         storagePair pair;
         storageDocument.read(pair, tem.data[iter.num].pos);
-        rollback.push(time, 3, tem.data[iter.num].pos, pair.value);
+        if(time>0) rollback.push(time, 3, tem.data[iter.num].pos, pair.value);
         pair.value = newValue;
         storageDocument.update(pair, tem.data[iter.num].pos);
     }
@@ -1018,9 +926,9 @@ namespace sjtu {
     void bpTree<Key, Value, HashType, HashFunc, KeyCompare, HashCompare>::roll() {
         rollback.logFile.open(rollback.name + "Logfile.dat");
         --rollback.logSiz;
-        rollback.logFile.seekp(4 + rollback.logSiz * sizeOfLog);
+        rollback.logFile.seekp(4 + rollback.logSiz * sizeof(Log));
         Log curLog;
-        rollback.logFile.read(reinterpret_cast<char *>(&curLog), sizeOfLog);
+        rollback.logFile.read(reinterpret_cast<char *>(&curLog), sizeof(Log));
         if (curLog.op == 1) {
             storagePair curPair;
             storageDocument.read(curPair, curLog.obj);
@@ -1032,9 +940,9 @@ namespace sjtu {
         } else if (curLog.op == 3) {
             rollback.modStack.open(rollback.name + "ModStack.dat");
             --rollback.modSiz;
-            rollback.modStack.seekp(4 + rollback.modSiz * sizeOfValue);
+            rollback.modStack.seekp(4 + rollback.modSiz * sizeof(Value));
             Value oldValue;
-            rollback.modStack.read(reinterpret_cast<char *>(&oldValue), sizeOfValue);
+            rollback.modStack.read(reinterpret_cast<char *>(&oldValue), sizeof(Value));
             storagePair curPair;
             storageDocument.read(curPair, curLog.obj);
             curPair.value = oldValue;
