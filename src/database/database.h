@@ -249,6 +249,96 @@ namespace sjtu {
             }
         };
 
+        struct Log{
+            //时间戳
+            int time=0;
+            //内存池内的位置
+            int obj=0;
+            //操作类型 1 insert 2 delete 3 modify
+            int op=0;
+            //如果操作是modify，原本的value值
+            int pos=0;
+        };
+
+        static const int sizeOfValue= sizeof(Value);
+        static const int sizeOfLog=sizeof(Log);
+
+        class Rollback {
+            friend class bpTree;
+        private:
+            enum operation{insert,erase,modify};
+            fstream logFile;
+            fstream modStack;
+            string name;
+            int logSiz=0;
+            int modSiz=0;
+
+
+        public:
+            Rollback(string s){
+                logFile.open(name+"Logfile.dat");
+                if (logFile) {
+                    logFile.seekg(0);
+                    logFile.read(reinterpret_cast<char *>(&logSiz), sizeof(int));
+                    logFile.close();
+                } else {
+                    logFile.clear();
+                    logFile.open(name+"Logfile.dat", std::fstream::out);
+                    logFile.seekp(0);
+                    logFile.write(reinterpret_cast<char *>(&logSiz), sizeof(int));
+                    logFile.close();
+                }
+                modStack.open(name+"ModStack.dat");
+                if (modStack) {
+                    modStack.seekg(0);
+                    modStack.read(reinterpret_cast<char *>(&logSiz), sizeof(int));
+                    modStack.close();
+                } else {
+                    modStack.clear();
+                    modStack.open(name+"ModStack.dat", std::fstream::out);
+                    modStack.seekp(0);
+                    modStack.write(reinterpret_cast<char *>(&modSiz), sizeof(int));
+                    modStack.close();
+                }
+            }
+
+            ~Rollback(){
+                modStack.open(name+"ModStack.dat");
+                modStack.seekp(0);
+                modStack.write(reinterpret_cast<char*>(&modSiz),sizeof(int));
+                modStack.close();
+                logFile.open(name+"Logfile.dat");
+                logFile.seekp(0);
+                logFile.write(reinterpret_cast<char*>(&logSiz),sizeof(int));
+                logFile.close();
+            }
+
+            void push(int time,int op, int obj){
+                logFile.open(name+"Logfile.dat");
+                logFile.seekp(4+logSiz*sizeOfLog);
+                Log tem{time, obj, op};
+                logFile.write(reinterpret_cast<char*>(&tem),sizeOfLog);
+                logFile.close();
+                ++logSiz;
+            }
+
+            void push(int time,int op,int obj,const Value &value) {
+                modStack.open(name+"ModStack.dat");
+                int pos=4+modSiz*sizeOfValue;
+                modStack.seekp(pos);
+                modStack.write(reinterpret_cast<char*>(&value),sizeOfValue);
+                modStack.close();
+                ++modSiz;
+                logFile.open(name+"Logfile.dat");
+                logFile.seekp(4+logSiz*sizeOfLog);
+                Log tem{time, obj, op, pos};
+                logFile.write(reinterpret_cast<char*>(&tem),sizeOfLog);
+                logFile.close();
+                ++logSiz;
+            }
+        };
+
+
         bpNode root;
         iofile<array> arrayDocument;
         iofile<bpNode> nodeDocument;
@@ -260,6 +350,7 @@ namespace sjtu {
         static KeyCompare keyCompare;
         static HashCompare hashCompare;
         static HashFunc hashFunc;
+        Rollback rollback;
         std::string filename;
 
 
@@ -297,9 +388,9 @@ namespace sjtu {
 
         sjtu::vector<Value> query(Key key);
 
-        int insert(Key key, Value value);
+        int insert(Key key, Value value,int time);
 
-        bool erase(Key key, Value value);
+        bool erase(Key key, Value value,int time);
 
         int size();
 
@@ -313,6 +404,7 @@ namespace sjtu {
 
         iterator begin();
 
+        void roll();
     };
 
     template<class Key, class Value, class HashType, class HashFunc, class KeyCompare, class HashCompare>
@@ -337,7 +429,7 @@ namespace sjtu {
     template<class Key, class Value, class HashType, class HashFunc, class KeyCompare, class HashCompare>
     bpTree<Key, Value, HashType, HashFunc, KeyCompare, HashCompare>::bpTree(std::string name)
             :root(), nodeDocument(name + "nodeDocument"), arrayDocument(name + "arrayDocument"),
-             storageDocument(name + "storageDocument") {
+             storageDocument(name + "storageDocument"), rollback(name),filename(name) {
         basicData.open(name + "basicData" + ".dat");
         if (basicData) {
             basicData.seekg(0);
@@ -374,7 +466,7 @@ namespace sjtu {
     }
 
     template<class Key, class Value, class HashType, class HashFunc, class KeyCompare, class HashCompare>
-    int bpTree<Key, Value, HashType, HashFunc, KeyCompare, HashCompare>::insert(Key key, Value value) {
+    int bpTree<Key, Value, HashType, HashFunc, KeyCompare, HashCompare>::insert(Key key, Value value,int time) {
         HashType valueHash = hashFunc(value);
         indexPair obj(key, valueHash, 0);
         if (siz == 0) {
@@ -408,12 +500,13 @@ namespace sjtu {
         if (curNode.loc != root.loc) nodeDocument.update(curNode, curNode.loc);
         else root = curNode;
         ++siz;
+        rollback.push(time,1,valuePos);
         if (curArray.arraySiz == MAX_DATA) arraySplit(curNode, curArray, posInNode);
         return valuePos;
     }
 
     template<class Key, class Value, class HashType, class HashFunc, class KeyCompare, class HashCompare>
-    bool bpTree<Key, Value, HashType, HashFunc, KeyCompare, HashCompare>::erase(Key key, Value value) {
+    bool bpTree<Key, Value, HashType, HashFunc, KeyCompare, HashCompare>::erase(Key key, Value value,int time) {
         HashType valueHash = hashFunc(value);
         indexPair obj(key, valueHash, 0);
         if (siz == 0) return false;
@@ -435,6 +528,7 @@ namespace sjtu {
         if (curNode.loc != root.loc) nodeDocument.update(curNode, curNode.loc);
         else root = curNode;
         --siz;
+        rollback.push(time,2,curNode.children[posInNode]);
         if (curArray.arraySiz < MIN_DATA) arrayAdoption(curNode, curArray, posInNode);
         return true;
     }
@@ -908,6 +1002,35 @@ namespace sjtu {
         Value result;
         storageDocument.read(result, pos);
         return result;
+    }
+
+    template<class Key, class Value, class HashType, class HashFunc, class KeyCompare, class HashCompare>
+    void bpTree<Key, Value, HashType, HashFunc, KeyCompare, HashCompare>::roll() {
+        rollback.logFile.open(rollback.name+"Logfile.dat");
+        --rollback.logSiz;
+        rollback.logFile.seekp(4+rollback.logSiz*sizeOfLog);
+        Log curLog;
+        rollback.logFile.read(reinterpret_cast<char*>(&curLog),sizeOfLog);
+        if(curLog.op==1){
+            storagePair curPair;
+            storageDocument.read(curPair,curLog.obj);
+            erase(curPair.key,curPair.value);
+        }
+        else if(curLog.op==2){
+            storagePair curPair;
+            storageDocument.read(curPair,curLog.obj);
+            insert(curPair.key,curPair.value);
+        }
+        else if(curLog.op==3){
+            rollback.modStack.open(rollback.name+"ModStack.dat");
+            --rollback.modSiz;
+            rollback.logFile.seekp(4+rollback.modSiz*sizeOfValue);
+            Value oldValue;
+            storagePair curPair;
+            storageDocument.read(curPair,curLog.obj);
+            curPair.value=oldValue;
+            storageDocument.update(curPair,curLog.obj);
+        }
     }
 }
 
