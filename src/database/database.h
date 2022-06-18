@@ -249,90 +249,93 @@ namespace sjtu {
             }
         };
 
-        struct Log{
+        struct Log {
             //时间戳
-            int time=0;
+            int time = 0;
             //内存池内的位置
-            int obj=0;
+            int obj = 0;
             //操作类型 1 insert 2 delete 3 modify
-            int op=0;
+            int op = 0;
             //如果操作是modify，原本的value值
-            int pos=0;
+            int pos = 0;
         };
 
-        static const int sizeOfValue= sizeof(Value);
-        static const int sizeOfLog=sizeof(Log);
+        static const int sizeOfValue = sizeof(Value);
+        static const int sizeOfLog = sizeof(Log);
 
         class Rollback {
             friend class bpTree;
+
         private:
-            enum operation{insert,erase,modify};
+            enum operation {
+                insert, erase, modify
+            };
             fstream logFile;
             fstream modStack;
             string name;
-            int logSiz=0;
-            int modSiz=0;
+            int logSiz = 0;
+            int modSiz = 0;
 
 
         public:
-            Rollback(string s){
-                logFile.open(name+"Logfile.dat");
+            Rollback(string s) {
+                logFile.open(name + "Logfile.dat");
                 if (logFile) {
                     logFile.seekg(0);
                     logFile.read(reinterpret_cast<char *>(&logSiz), sizeof(int));
                     logFile.close();
                 } else {
                     logFile.clear();
-                    logFile.open(name+"Logfile.dat", std::fstream::out);
+                    logFile.open(name + "Logfile.dat", std::fstream::out);
                     logFile.seekp(0);
                     logFile.write(reinterpret_cast<char *>(&logSiz), sizeof(int));
                     logFile.close();
                 }
-                modStack.open(name+"ModStack.dat");
+                modStack.open(name + "ModStack.dat");
                 if (modStack) {
                     modStack.seekg(0);
                     modStack.read(reinterpret_cast<char *>(&logSiz), sizeof(int));
                     modStack.close();
                 } else {
                     modStack.clear();
-                    modStack.open(name+"ModStack.dat", std::fstream::out);
+                    modStack.open(name + "ModStack.dat", std::fstream::out);
                     modStack.seekp(0);
                     modStack.write(reinterpret_cast<char *>(&modSiz), sizeof(int));
                     modStack.close();
                 }
             }
 
-            ~Rollback(){
-                modStack.open(name+"ModStack.dat");
+            ~Rollback() {
+                modStack.open(name + "ModStack.dat");
                 modStack.seekp(0);
-                modStack.write(reinterpret_cast<char*>(&modSiz),sizeof(int));
+                modStack.write(reinterpret_cast<char *>(&modSiz), sizeof(int));
                 modStack.close();
-                logFile.open(name+"Logfile.dat");
+                logFile.open(name + "Logfile.dat");
                 logFile.seekp(0);
-                logFile.write(reinterpret_cast<char*>(&logSiz),sizeof(int));
+                logFile.write(reinterpret_cast<char *>(&logSiz), sizeof(int));
                 logFile.close();
             }
 
-            void push(int time,int op, int obj){
-                logFile.open(name+"Logfile.dat");
-                logFile.seekp(4+logSiz*sizeOfLog);
+            void push(int time, int op, int obj) {
+                logFile.open(name + "Logfile.dat");
+                logFile.seekp(4 + logSiz * sizeOfLog);
                 Log tem{time, obj, op};
-                logFile.write(reinterpret_cast<char*>(&tem),sizeOfLog);
+                logFile.write(reinterpret_cast<char *>(&tem), sizeOfLog);
                 logFile.close();
                 ++logSiz;
             }
 
-            void push(int time,int op,int obj,const Value &value) {
-                modStack.open(name+"ModStack.dat");
-                int pos=4+modSiz*sizeOfValue;
+            void push(int time, int op, int obj, const Value &value) {
+                modStack.open(name + "ModStack.dat");
+                int pos = 4 + modSiz * sizeOfValue;
                 modStack.seekp(pos);
-                modStack.write(reinterpret_cast<char*>(&value),sizeOfValue);
+                modStack.write(reinterpret_cast<char *>(&value), sizeOfValue);
                 modStack.close();
                 ++modSiz;
-                logFile.open(name+"Logfile.dat");
-                logFile.seekp(4+logSiz*sizeOfLog);
+                logFile.open(name + "Logfile.dat");
+                logFile.seekp(4 + logSiz * sizeOfLog);
                 Log tem{time, obj, op, pos};
-                logFile.write(reinterpret_cast<char*>(&tem),sizeOfLog);
+                logFile.write(reinterpret_cast<char *>(&tem), sizeOfLog);
                 logFile.close();
                 ++logSiz;
             }
@@ -388,15 +391,19 @@ namespace sjtu {
 
         sjtu::vector<Value> query(Key key);
 
-        int insert(Key key, Value value,int time);
+        int insert(Key key, Value value, int time);
 
-        bool erase(Key key, Value value,int time);
+        int rollbackInsert(Key key, Value value, int pos);
+
+        bool erase(Key key, Value value, int time);
+
+        int rollbackErase(Key key, Value value);
 
         int size();
 
         void clear();
 
-        void valueUpdate(iterator iter, Value newValue);
+        void valueUpdate(iterator iter, Value newValue, int time);
 
         Value dirRead(int pos);
 
@@ -429,7 +436,7 @@ namespace sjtu {
     template<class Key, class Value, class HashType, class HashFunc, class KeyCompare, class HashCompare>
     bpTree<Key, Value, HashType, HashFunc, KeyCompare, HashCompare>::bpTree(std::string name)
             :root(), nodeDocument(name + "nodeDocument"), arrayDocument(name + "arrayDocument"),
-             storageDocument(name + "storageDocument"), rollback(name),filename(name) {
+             storageDocument(name + "storageDocument"), rollback(name), filename(name) {
         basicData.open(name + "basicData" + ".dat");
         if (basicData) {
             basicData.seekg(0);
@@ -466,7 +473,7 @@ namespace sjtu {
     }
 
     template<class Key, class Value, class HashType, class HashFunc, class KeyCompare, class HashCompare>
-    int bpTree<Key, Value, HashType, HashFunc, KeyCompare, HashCompare>::insert(Key key, Value value,int time) {
+    int bpTree<Key, Value, HashType, HashFunc, KeyCompare, HashCompare>::insert(Key key, Value value, int time) {
         HashType valueHash = hashFunc(value);
         indexPair obj(key, valueHash, 0);
         if (siz == 0) {
@@ -500,13 +507,13 @@ namespace sjtu {
         if (curNode.loc != root.loc) nodeDocument.update(curNode, curNode.loc);
         else root = curNode;
         ++siz;
-        rollback.push(time,1,valuePos);
+        rollback.push(time, 1, valuePos);
         if (curArray.arraySiz == MAX_DATA) arraySplit(curNode, curArray, posInNode);
         return valuePos;
     }
 
     template<class Key, class Value, class HashType, class HashFunc, class KeyCompare, class HashCompare>
-    bool bpTree<Key, Value, HashType, HashFunc, KeyCompare, HashCompare>::erase(Key key, Value value,int time) {
+    bool bpTree<Key, Value, HashType, HashFunc, KeyCompare, HashCompare>::erase(Key key, Value value, int time) {
         HashType valueHash = hashFunc(value);
         indexPair obj(key, valueHash, 0);
         if (siz == 0) return false;
@@ -528,7 +535,7 @@ namespace sjtu {
         if (curNode.loc != root.loc) nodeDocument.update(curNode, curNode.loc);
         else root = curNode;
         --siz;
-        rollback.push(time,2,curNode.children[posInNode]);
+        rollback.push(time, 2, curNode.children[posInNode]);
         if (curArray.arraySiz < MIN_DATA) arrayAdoption(curNode, curArray, posInNode);
         return true;
     }
@@ -721,7 +728,7 @@ namespace sjtu {
                 nodeDocument.read(nxtNode, faNode.children[posInNode + 1]);
                 if (nxtNode.nodeSiz > MIN_KEY) {
                     curNode.children[curNode.nodeSiz + 1] = nxtNode.children[0];
-                    if(!nxtNode.isLeaf) {
+                    if (!nxtNode.isLeaf) {
                         bpNode tem;
                         nodeDocument.read(tem, nxtNode.children[0]);
                         tem.parent = curNode.loc;
@@ -749,10 +756,10 @@ namespace sjtu {
                 nodeDocument.read(nxtNode, faNode.children[posInNode + 1]);
                 if (nxtNode.nodeSiz > MIN_KEY) {
                     curNode.children[curNode.nodeSiz + 1] = nxtNode.children[0];
-                   if(!nxtNode.isLeaf) {
+                    if (!nxtNode.isLeaf) {
                         bpNode tem;
                         nodeDocument.read(tem, nxtNode.children[0]);
-                       tem.parent = curNode.loc;
+                        tem.parent = curNode.loc;
                         nodeDocument.update(tem, tem.loc);
                     }
                     ++curNode.nodeSiz;
@@ -773,7 +780,7 @@ namespace sjtu {
                         ++curNode.nodeSiz;
                         for (int i = curNode.nodeSiz; i > 0; --i) curNode.children[i] = curNode.children[i - 1];
                         curNode.children[0] = preNode.children[preNode.nodeSiz];
-                        if(!curNode.isLeaf) {
+                        if (!curNode.isLeaf) {
                             bpNode tem;
                             nodeDocument.read(tem, curNode.children[0]);
                             tem.parent = curNode.loc;
@@ -974,11 +981,12 @@ namespace sjtu {
 
     template<class Key, class Value, class HashType, class HashFunc, class KeyCompare, class HashCompare>
     void bpTree<Key, Value, HashType, HashFunc, KeyCompare, HashCompare>::valueUpdate(bpTree::iterator iter,
-                                                                                      Value newValue) {
+                                                                                      Value newValue, int time) {
         array tem;
         iter.master->arrayDocument.read(tem, iter.pos);
         storagePair pair;
         storageDocument.read(pair, tem.data[iter.num].pos);
+        rollback.push(time,3,tem.data[iter.num].pos,pair.value);
         pair.value = newValue;
         storageDocument.update(pair, tem.data[iter.num].pos);
     }
@@ -1006,31 +1014,94 @@ namespace sjtu {
 
     template<class Key, class Value, class HashType, class HashFunc, class KeyCompare, class HashCompare>
     void bpTree<Key, Value, HashType, HashFunc, KeyCompare, HashCompare>::roll() {
-        rollback.logFile.open(rollback.name+"Logfile.dat");
+        rollback.logFile.open(rollback.name + "Logfile.dat");
         --rollback.logSiz;
-        rollback.logFile.seekp(4+rollback.logSiz*sizeOfLog);
+        rollback.logFile.seekp(4 + rollback.logSiz * sizeOfLog);
         Log curLog;
-        rollback.logFile.read(reinterpret_cast<char*>(&curLog),sizeOfLog);
-        if(curLog.op==1){
+        rollback.logFile.read(reinterpret_cast<char *>(&curLog), sizeOfLog);
+        if (curLog.op == 1) {
             storagePair curPair;
-            storageDocument.read(curPair,curLog.obj);
-            erase(curPair.key,curPair.value);
-        }
-        else if(curLog.op==2){
+            storageDocument.read(curPair, curLog.obj);
+            erase(curPair.key, curPair.value);
+        } else if (curLog.op == 2) {
             storagePair curPair;
-            storageDocument.read(curPair,curLog.obj);
-            insert(curPair.key,curPair.value);
-        }
-        else if(curLog.op==3){
-            rollback.modStack.open(rollback.name+"ModStack.dat");
+            storageDocument.read(curPair, curLog.obj);
+            insert(curPair.key, curPair.value);
+        } else if (curLog.op == 3) {
+            rollback.modStack.open(rollback.name + "ModStack.dat");
             --rollback.modSiz;
-            rollback.logFile.seekp(4+rollback.modSiz*sizeOfValue);
+            rollback.modStack.seekp(4 + rollback.modSiz * sizeOfValue);
             Value oldValue;
+            rollback.modStack.read(reinterpret_cast<char*>(&oldValue),sizeOfValue);
             storagePair curPair;
-            storageDocument.read(curPair,curLog.obj);
-            curPair.value=oldValue;
-            storageDocument.update(curPair,curLog.obj);
+            storageDocument.read(curPair, curLog.obj);
+            curPair.value = oldValue;
+            storageDocument.update(curPair, curLog.obj);
         }
+    }
+
+    template<class Key, class Value, class HashType, class HashFunc, class KeyCompare, class HashCompare>
+    int bpTree<Key, Value, HashType, HashFunc, KeyCompare, HashCompare>::rollbackInsert(Key key, Value value, int pos) {
+        HashType valueHash = hashFunc(value);
+        indexPair obj(key, valueHash, 0);
+        if (siz == 0) {
+            storagePair pair(key, value);
+            int valuePos = storageDocument.write(pair);
+            obj.pos = valuePos;
+            array tem(obj, 0);
+            head = root.children[0] = arrayDocument.write(tem);
+            ++siz;
+            return true;
+        }
+        bpNode curNode = root;
+        while (!curNode.isLeaf) {
+            int posInNode = keySearch(curNode.indexes, 0, curNode.nodeSiz, obj);
+            nodeDocument.read(curNode, curNode.children[posInNode]);
+        }
+        int posInNode = keySearch(curNode.indexes, 0, curNode.nodeSiz, obj);
+        array curArray;
+        arrayDocument.read(curArray, curNode.children[posInNode]);
+        int posInArray = binarySearch(curArray.data, 0, curArray.arraySiz, obj);
+        if (curArray.data[posInArray] == obj && posInArray != curArray.arraySiz) return 0;
+        obj.pos = pos;
+        if (posInArray == 0 && posInNode != 0) curNode.indexes[posInNode - 1] = obj;
+        else if (posInNode == 0 && posInArray == 0 && curNode.loc != root.loc) indexUpdate(curNode, obj);
+        for (int i = curArray.arraySiz; i > posInArray; --i) curArray.data[i] = curArray.data[i - 1];
+        curArray.data[posInArray] = obj;
+        ++curArray.arraySiz;
+        arrayDocument.update(curArray, curNode.children[posInNode]);
+        if (curNode.loc != root.loc) nodeDocument.update(curNode, curNode.loc);
+        else root = curNode;
+        ++siz;
+        if (curArray.arraySiz == MAX_DATA) arraySplit(curNode, curArray, posInNode);
+        return pos;
+    }
+
+    template<class Key, class Value, class HashType, class HashFunc, class KeyCompare, class HashCompare>
+    int bpTree<Key, Value, HashType, HashFunc, KeyCompare, HashCompare>::rollbackErase(Key key, Value value) {
+        HashType valueHash = hashFunc(value);
+        indexPair obj(key, valueHash, 0);
+        if (siz == 0) return false;
+        bpNode curNode = root;
+        while (!curNode.isLeaf) {
+            int posInNode = keySearch(curNode.indexes, 0, curNode.nodeSiz, obj);
+            nodeDocument.read(curNode, curNode.children[posInNode]);
+        }
+        int posInNode = keySearch(curNode.indexes, 0, curNode.nodeSiz, obj);
+        array curArray;
+        arrayDocument.read(curArray, curNode.children[posInNode]);
+        int posInArray = binarySearch(curArray.data, 0, curArray.arraySiz, obj);
+        if (curArray.data[posInArray] != obj) return false;
+        for (int i = posInArray; i <= curArray.arraySiz - 2; ++i) curArray.data[i] = curArray.data[i + 1];
+        if (posInArray == 0 && posInNode != 0) curNode.indexes[posInNode - 1] = curArray.data[0];
+        else if (posInNode == 0 && posInArray == 0)indexUpdate(curNode, curArray.data[0]);
+        --curArray.arraySiz;
+        arrayDocument.update(curArray, curNode.children[posInNode]);
+        if (curNode.loc != root.loc) nodeDocument.update(curNode, curNode.loc);
+        else root = curNode;
+        --siz;
+        if (curArray.arraySiz < MIN_DATA) arrayAdoption(curNode, curArray, posInNode);
+        return true;
     }
 }
 
