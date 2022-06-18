@@ -395,7 +395,7 @@ namespace sjtu {
         array curArray;
         arrayDocument.read(curArray, curNode.children[posInNode]);
         int posInArray = binarySearch(curArray.data, 0, curArray.arraySiz, obj);
-        if (curArray.data[posInArray] == obj) return 0;
+        if (curArray.data[posInArray] == obj&&posInArray!=curArray.arraySiz) return 0;
         storagePair pair(key, value);
         int valuePos = storageDocument.write(pair);
         obj.pos = valuePos;
