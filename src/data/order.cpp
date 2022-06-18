@@ -4,7 +4,8 @@
 namespace sjtu {
 Order::Order() = default;
 Order::Order(const TrainID& _train_id, const Station& _depart_station, const Time& _depart_time,
-             const Station& _arrive_station, const Time& _arrive_time, int _price, int _num, int _time_stamp)
+             const Station& _arrive_station, const Time& _arrive_time, int _price, int _num, int _time_stamp,
+             OrderStatus _status)
     : train_id(_train_id),
       depart_station(_depart_station),
       depart_time(_depart_time),
@@ -12,7 +13,8 @@ Order::Order(const TrainID& _train_id, const Station& _depart_station, const Tim
       arrive_time(_arrive_time),
       price(_price),
       num(_num),
-      time_stamp(_time_stamp) {}
+      time_stamp(_time_stamp),
+      status(_status) {}
 Order::Order(const Order& other) = default;
 Order& Order::operator=(const Order& other) = default;
 ostream& operator<<(ostream& os, const Order& order) {

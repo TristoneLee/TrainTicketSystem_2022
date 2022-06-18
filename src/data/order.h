@@ -17,7 +17,7 @@ class Order {
   int time_stamp;
   Order();
   Order(const TrainID& _train_id, const Station& _depart_station, const Time& _depart_time,
-        const Station& _arrive_station, const Time& _arrive_time, int _price, int _num, int _time_stamp);
+        const Station& _arrive_station, const Time& _arrive_time, int _price, int _num, int _time_stamp,OrderStatus _status);
   Order(const Order& other);
   Order& operator=(const Order& other);
   friend ostream& operator<<(ostream& out, const Order& order);
