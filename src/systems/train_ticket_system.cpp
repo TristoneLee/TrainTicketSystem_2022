@@ -195,10 +195,10 @@ void TrainTicketSystem::Work() {
       if (now_cmd.op == "clean") {
         // TODO
       }
-    } /*  catch (const char* msg) {
+    }  catch (const char* msg) {
        cout << "-1" << endl;
        cerr << msg << endl;
-     }  */
+     } 
     catch (...) {
       cout << "-1" << endl;
       cerr << "unknown error" << endl;
