@@ -409,6 +409,8 @@ namespace sjtu {
 
         iterator find(Key key);
 
+        iterator pairFind(Key key, Value value);
+
         iterator begin();
 
         void roll();
@@ -986,7 +988,7 @@ namespace sjtu {
         iter.master->arrayDocument.read(tem, iter.pos);
         storagePair pair;
         storageDocument.read(pair, tem.data[iter.num].pos);
-        rollback.push(time,3,tem.data[iter.num].pos,pair.value);
+        rollback.push(time, 3, tem.data[iter.num].pos, pair.value);
         pair.value = newValue;
         storageDocument.update(pair, tem.data[iter.num].pos);
     }
@@ -1032,7 +1034,7 @@ namespace sjtu {
             --rollback.modSiz;
             rollback.modStack.seekp(4 + rollback.modSiz * sizeOfValue);
             Value oldValue;
-            rollback.modStack.read(reinterpret_cast<char*>(&oldValue),sizeOfValue);
+            rollback.modStack.read(reinterpret_cast<char *>(&oldValue), sizeOfValue);
             storagePair curPair;
             storageDocument.read(curPair, curLog.obj);
             curPair.value = oldValue;
@@ -1102,6 +1104,24 @@ namespace sjtu {
         --siz;
         if (curArray.arraySiz < MIN_DATA) arrayAdoption(curNode, curArray, posInNode);
         return true;
+    }
+
+    template<class Key, class Value, class HashType, class HashFunc, class KeyCompare, class HashCompare>
+    typename bpTree<Key, Value, HashType, HashFunc, KeyCompare, HashCompare>::iterator
+    bpTree<Key, Value, HashType, HashFunc, KeyCompare, HashCompare>::pairFind(Key key, Value value) {
+        HashType valueHash = hashFunc(value);
+        indexPair obj(key, valueHash, 0);
+        bpNode curNode = root;
+        while (!curNode.isLeaf) {
+            int posInNode = keySearch(curNode.indexes, 0, curNode.nodeSiz, obj);
+            nodeDocument.read(curNode, curNode.children[posInNode]);
+        }
+        int posInNode = keySearch(curNode.indexes, 0, curNode.nodeSiz, obj);
+        array curArray;
+        arrayDocument.read(curArray, curNode.children[posInNode]);
+        int posInArray = binarySearch(curArray.data, 0, curArray.arraySiz, obj);
+        iterator iter(curArray.next,curNode.children[posInNode],posInArray,this);
+        return iter;
     }
 }
 
