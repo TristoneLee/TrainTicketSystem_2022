@@ -88,7 +88,6 @@ void TrainTicketSystem::Work() {
         User cur_user = user_system.QueryProfile(now_cmd.args['c']);
         Assert(cur_user.privilege > user.privilege || cur_user.username == user.username,
                "query_profile fail: privilege not enough");
-        // cout << user.username << ' ' << user.name << ' ' << user.mail_addr << ' ' << user.privilege << endl;
         cout << user << endl;
       }
       if (now_cmd.op == "modify_profile") {
