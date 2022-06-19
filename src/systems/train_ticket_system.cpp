@@ -180,13 +180,45 @@ void TrainTicketSystem::Work() {
         PrintTrip(transfer_trip.trips[1], transfer_trip.transfer_station, arrive_station);
       }
       if (now_cmd.op == "buy_ticket") {
-        // TODO
+        const string& train_id = now_cmd.args['i'];
+        const string& user_name = now_cmd.args['u'];
+        Train train = train_system.QueryTrain(train_id);
+        Assert(train.released, "buy_ticket fail: train not released");
+        Date date(now_cmd.args['d']);
+        const string& dep_station = now_cmd.args['f'];
+        const string& arr_station = now_cmd.args['t'];
+        int dep_idx = train.FindStation(dep_station);
+        int arr_idx = train.FindStation(arr_station);
+        int buy_num = ToInt(now_cmd.args['n']);
+        Assert(buy_num < train.seat_num, "buy_ticket fail: not enough seats");
+        int train_idx = train.FindLeavingTrain(dep_idx, date);
+        Assert(train_idx != Train::NIDX, "buy_ticket fail: no train leaving on this date");
+        Time dep_time = train.LeavingTime(dep_idx, train_idx);
+        Time arr_time = train.ArrivingTime(arr_idx, train_idx);
+        int price = train.GetPrice(dep_idx, arr_idx);
+        bool accept_queue = false;
+        if (now_cmd.args.count('q') && now_cmd.args['q'] == "true") accept_queue = true;
+        bool stat = ticket_system.BuyTicket(user_name, train_id, train_idx, dep_idx, dep_station, dep_time, arr_idx,
+                                            arr_station, arr_time, price, buy_num, accept_queue, now_cmd.timestamp);
+        if (stat)
+          cout << price * buy_num << endl;
+        else {
+          if (accept_queue)
+            cout << "queue" << endl;
+          else
+            cout << "-1" << endl;
+        }
       }
       if (now_cmd.op == "query_order") {
-        // TODO
+        const string& username = now_cmd.args['u'];
+        ticket_system.QueryOrders(username);
       }
       if (now_cmd.op == "refund_ticket") {
-        // TODO
+        const string& username = now_cmd.args['u'];
+        int idx = 1;
+        if (now_cmd.args.count('n')) idx = ToInt(now_cmd.args['n']);
+        ticket_system.RefundTicket(username, idx);
+        cout << '0' << endl;
       }
       if (now_cmd.op == "rollback") {
         // TODO
@@ -194,11 +226,10 @@ void TrainTicketSystem::Work() {
       if (now_cmd.op == "clean") {
         // TODO
       }
-    }  catch (const char* msg) {
-       cout << "-1" << endl;
-       cerr << msg << endl;
-     } 
-    catch (...) {
+    } catch (const char* msg) {
+      cout << "-1" << endl;
+      cerr << msg << endl;
+    } catch (...) {
       cout << "-1" << endl;
       cerr << "unknown error" << endl;
     }
