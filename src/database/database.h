@@ -402,7 +402,7 @@ namespace sjtu {
         basicData.close();
         siz = 0;
         head = 0;
-        bpNode tem();
+        bpNode tem;
         root = tem;
         root.isLeaf = true;
         locOfRoot = root.loc = nodeDocument.write(root);
