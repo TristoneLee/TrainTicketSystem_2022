@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.10.2)
 project(TrainTicketSystem)
 set(CMAKE_CXX_STANDARD 17)
 # ------------------the following is to be modified------------------
-set(lib_dir_names  stl tools  database)
+set(lib_dir_names stl tools  database)
 set(program_names test_bptree)
 
 # -------------------------------------------------------------------
@@ -34,7 +34,7 @@ message("${lib_dirs}")
 message("${src_files}")
 set(main_base_dir ${src_base_dir}/main)
 foreach(program_name ${program_names})
-  set(now_main_file ${main_base_dir}/${program_name}.cpp )
+  set(now_main_file ${main_base_dir}/${program_name}.cpp src/database/cache.inl)
   message("${program_name} ${now_main_file} ${src_files}")
   add_executable(${program_name} ${now_main_file} ${src_files})
 endforeach()
