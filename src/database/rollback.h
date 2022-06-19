@@ -83,13 +83,13 @@ public:
         modStack.open(name + "ModStack.dat");
         int pos = 4 + modSiz * sizeof(value);
         modStack.seekp(pos);
-        modStack.write(reinterpret_cast<char *>(&value), sizeof(value));
+        modStack.write(reinterpret_cast<const char *>(&value), sizeof(value));
         modStack.close();
         ++modSiz;
         logFile.open(name + "Logfile.dat");
         logFile.seekp(4 + logSiz * sizeof(Log));
         Log tem{time, obj, op, pos};
-        logFile.write(reinterpret_cast<char *>(&tem), sizeof(Log));
+        logFile.write(reinterpret_cast<const char *>(&tem), sizeof(Log));
         logFile.close();
         ++logSiz;
     }
