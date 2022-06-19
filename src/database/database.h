@@ -330,7 +330,7 @@ namespace sjtu {
 
         iterator begin();
 
-        void roll();
+        void roll(int stTime);
     };
 
     template<class Key, class Value, class HashType, class HashFunc, class KeyCompare, class HashCompare>
@@ -947,30 +947,33 @@ namespace sjtu {
     }
 
     template<class Key, class Value, class HashType, class HashFunc, class KeyCompare, class HashCompare>
-    void bpTree<Key, Value, HashType, HashFunc, KeyCompare, HashCompare>::roll() {
+    void bpTree<Key, Value, HashType, HashFunc, KeyCompare, HashCompare>::roll(int spTime) {
         rollback.logFile.open(rollback.name + "Logfile.dat");
-        --rollback.logSiz;
-        rollback.logFile.seekp(4 + rollback.logSiz * sizeof(Log));
-        Log curLog;
-        rollback.logFile.read(reinterpret_cast<char *>(&curLog), sizeof(Log));
-        if (curLog.op == 1) {
-            storagePair curPair;
-            storageDocument.read(curPair, curLog.obj);
-            erase(curPair.key, curPair.value);
-        } else if (curLog.op == 2) {
-            storagePair curPair;
-            storageDocument.read(curPair, curLog.obj);
-            insert(curPair.key, curPair.value);
-        } else if (curLog.op == 3) {
-            rollback.modStack.open(rollback.name + "ModStack.dat");
-            --rollback.modSiz;
-            rollback.modStack.seekp(4 + rollback.modSiz * sizeof(Value));
-            Value oldValue;
-            rollback.modStack.read(reinterpret_cast<char *>(&oldValue), sizeof(Value));
-            storagePair curPair;
-            storageDocument.read(curPair, curLog.obj);
-            curPair.value = oldValue;
-            storageDocument.update(curPair, curLog.obj);
+        rollback.modStack.open(rollback.name + "ModStack.dat");
+        while (true) {
+            rollback.logFile.seekp(4 + (rollback.logSiz-1) * sizeof(Log));
+            Log curLog;
+            rollback.logFile.read(reinterpret_cast<char *>(&curLog), sizeof(Log));
+            if(curLog.time<=spTime) break;
+            --rollback.logSiz;
+            if (curLog.op == 1) {
+                storagePair curPair;
+                storageDocument.read(curPair, curLog.obj);
+                erase(curPair.key, curPair.value);
+            } else if (curLog.op == 2) {
+                storagePair curPair;
+                storageDocument.read(curPair, curLog.obj);
+                insert(curPair.key, curPair.value);
+            } else if (curLog.op == 3) {
+                --rollback.modSiz;
+                rollback.modStack.seekp(4 + rollback.modSiz * sizeof(Value));
+                Value oldValue;
+                rollback.modStack.read(reinterpret_cast<char *>(&oldValue), sizeof(Value));
+                storagePair curPair;
+                storageDocument.read(curPair, curLog.obj);
+                curPair.value = oldValue;
+                storageDocument.update(curPair, curLog.obj);
+            }
         }
     }
 
