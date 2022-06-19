@@ -393,7 +393,7 @@ namespace sjtu {
             array tem(obj, 0);
             head = root.children[0] = arrayDocument.write(tem);
             ++siz;
-            return true;
+            return valuePos;
         }
         bpNode curNode = root;
         while (!curNode.isLeaf) {
