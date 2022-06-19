@@ -197,6 +197,7 @@ namespace sjtu {
             int children[MAX_CHILD]{};
 
             bpNode();
+            bpNode& operator=(const bpNode &rhs) = default;
         };
 
         class array {
@@ -320,7 +321,7 @@ namespace sjtu {
 
         void clear();
 
-        void valueUpdate(iterator iter, Value newValue, int time);
+        void valueUpdate(iterator iter, Value newValue, int time = -1);
 
         Value dirRead(int pos);
 
@@ -401,7 +402,7 @@ namespace sjtu {
         basicData.close();
         siz = 0;
         head = 0;
-        bpNode tem();
+        bpNode tem;
         root = tem;
         root.isLeaf = true;
         locOfRoot = root.loc = nodeDocument.write(root);
@@ -418,7 +419,7 @@ namespace sjtu {
             array tem(obj, 0);
             head = root.children[0] = arrayDocument.write(tem);
             ++siz;
-            return true;
+            return valuePos;
         }
         bpNode curNode = root;
         while (!curNode.isLeaf) {
@@ -745,6 +746,9 @@ namespace sjtu {
         nodeDocument.read(nxtNode, 17556);
         while (!curNode.isLeaf) {
             int posInNode = keySearch(curNode.indexes, 0, curNode.nodeSiz, key);
+            bpNode nxtNode;
+            nodeDocument.read(nxtNode, curNode.children[posInNode+1]);
+            // curNode = nxtNode;
             nodeDocument.read(curNode, curNode.children[posInNode]);
         }
         int posInNode = keySearch(curNode.indexes, 0, curNode.nodeSiz, key);
@@ -899,6 +903,9 @@ namespace sjtu {
         bpNode curNode = root;
         while (!curNode.isLeaf) {
             int posInNode = keySearch(curNode.indexes, 0, curNode.nodeSiz, key);
+            bpNode nxtNode;
+            nodeDocument.read(nxtNode, curNode.children[posInNode+1]);
+            // curNode = nxtNode;
             nodeDocument.read(curNode, curNode.children[posInNode]);
         }
         int posInNode = keySearch(curNode.indexes, 0, curNode.nodeSiz, key);
@@ -906,9 +913,11 @@ namespace sjtu {
         arrayDocument.read(curArray, curNode.children[posInNode]);
         int posInArray = binarySearch(curArray.data, 0, curArray.arraySiz, key);
         if (posInArray == curArray.arraySiz) {
+            int tmp = curArray.next;
             arrayDocument.read(curArray, curArray.next);
             ++posInNode;
             posInArray = binarySearch(curArray.data, 0, curArray.arraySiz, key);
+        return iterator(curArray.next, tmp, posInArray, curArray.arraySiz, this);
         }
         return iterator(curArray.next, curNode.children[posInNode], posInArray, curArray.arraySiz, this);
     }

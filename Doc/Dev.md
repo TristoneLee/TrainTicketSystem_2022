@@ -486,138 +486,196 @@
   接口说明：
   ```c++
   class TrainTicketSystem {
-   private:
-    TrainSystem *train_system_;
-    TicketSystem *ticket_system_;
-    UserSystem *user_system_;
-    LogSystem *log_system_;
-    int current_time_;
-    vector<User> online_user_list_;
-   public:
-    // 构造函数
-    // 执行构造的同时初始化系统（从文件中读入之前的数据）
-    TrainTicketSystem(const char *system_name);
-    // 析构函数
+  private:
+    UserSystem user_system;
+    TrainSystem train_system;
+    TicketSystem ticket_system;
+
+  public:
+    TrainTicketSystem();
     ~TrainTicketSystem();
-    // 执行指令
     void Work();
   };
   ```
 
-- `Str`类
-
-  辅助类，用于储存所有字符串类型的信息及输入。
-  
-  接口说明：
-  
-  ```c++
-  class Str{
-   private:
-    const char* val_;
-   public:
-    // 构造函数
-    Str(const char *str);
-    // 析构函数
-    ~Str();
-    // 获取长度
-    int Length();
-    // 赋值
-    Str& operator=(const Str* str);
-    // 比较（基于字典序）
-    bool operator<(const Str* str);
-    // 获取C风格字符串
-    const char* ToCStr();
-    // 清空
-    void Clear();
-  };
-  ```
-
-- `User`类
-  
-  数据类，储存一个用户的信息。
-
-  接口说明：
-  ```c++
-  class User{
-   public:
-    Str username;
-    Str name;
-    Str password;
-    Str email;
-    int mail_addr;
-    // 构造函数
-    User(const Str& _user_name, const Str& _name, const Str& _password, const Str& _email, int _privilege);
-    // 析构函数
-    ~User();
-  };
-  ```
-
-- `Train`类
-  
-  数据类，储存一个用户的信息。
-
-  接口说明：
-  ```c++
-  class Train{
-   public:
-    Str train_id;
-    int station_num;
-    Str station_list[100];
-    int seat_num;
-    int remain_seat_num[100];
-    int price_list[100];
-    int start_time_list;
-    int travel_time_list[100];
-    int stopover_time_list[100];
-    int sale_date;
-    int type;
-    // 构造函数
-    Train(const Str& _train_id, int _station_num, const Str* _station_list, int _seat_num, int* _price_list, int _start_time_list, int* _travel_time_list, int* _stopover_time_list, int _sale_date, int _type);
-    // 析构函数
-    ~Train();
-  };
-  ```
-- `TrainSystem`类
-  
-  主体类，实现了与车次系统相关的指令。
-
-  接口说明：
-  ```c++
-  class TrainSystem{
-   private:
-    bpTree<Str, Train>* train_list_;
-   public:
-    // 构造函数
-    TrainSystem(const char* system_name);
-    // 析构函数
-    ~TrainSystem();
-    // 添加车次
-    void AddTrain(const Train& train);
-    // 发布车次
-    void ReleaseTrain(const Str& train_id);
-    // 查询车次
-    void QueryTrain(const Str& train_id, int date);
-    // 查询车次列表
-    void QueryTicket(const Str& train_id, const Str& department_station, const Str& arrival_station, int date, int flag_transfer);
-    // 修改车次
-    void BuyTicket(const Str& train_id, const Train& train);
-    // 删除车次
-    void DeleteTrain(const Str& train_id);
-  };
-  ```
-  ```
-- `TicketSystem`类
-  
-  接口说明：
-  ```c++
-  ```
 - `UserSystem`类
   
+  主体类，实现了与用户相关的指令的执行。
+
   接口说明：
   ```c++
+  class UserSystem {
+  private:
+    linked_hashmap<string, bool> online_status_;
+    bpTree<UserName, User> users_;
+
+  public:
+    UserSystem();
+    void AddUser(const string& username, const string& name, const string& password, const string& mail_addr,
+                int privilege);
+    void Login(const string& username, const string& password);
+    void Logout(const string& username);
+    User QueryProfile(const string& username);
+    void ModifyProfile(const User& ori_val, const User& val);
+    bool IsOnline(const string& username);
+    bool CheckFirst();
+    void Clear();
+    ~UserSystem();
+  };
   ```
-- `LogSystem`类
+
+- `TrainSystem`类
   
+  主体类，实现了与车次相关的指令的执行。
+
   接口说明：
   ```c++
+  class TrainSystem {
+  private:
+    bpTree<TrainID, Train> trains_;
+    bpTree<Station, StationPass, TrainID, StationPassHash> station_passes_;
+
+  public:
+    TrainSystem();
+    void AddTrain(const string& train_id, int station_num, const vector<string>& station_list, int _seat_num,
+                  const vector<int>& price_list, Time start_time, const vector<int>& travel_time_list,
+                  const vector<int>& stopover_time_list, const vector<Date>& sale_date, char type);
+    void DeleteTrain(const string& train_id);
+    Train ReleaseTrain(const string& train_id);
+    Train QueryTrain(const string& train_id);
+    vector<Trip> QueryTicket(const string& depart_station, const string& arrive_station, Date date);
+    TransferTrip QueryTransfer(const string& depart_station, const string& arrive_station, Date date, bool SortByTime);
+    void Clear();
+    ~TrainSystem();
+  };
+  ```
+
+- `TicketSystem`类
+  
+  主体类，实现了与车票及订单相关的指令的执行。
+
+  接口说明：
+  ```c++
+  class TicketSystem {
+  private:
+    bpTree<TrainIndex, Seats> seats_;
+    bpTree<TrainIndex, Order, int, OrderHash> train_orders_;
+    bpTree<UserName, OrderIter, int, OrderIterHash, std::less<UserName>, std::greater<int>> user_orders_;
+
+  public:
+    TicketSystem();
+    void ReleaseSeats(const TrainID& train_id, int total_seat, int sale_duration);
+    Seats QuerySeats(const TrainID& train_id, int idx);
+    bool BuyTicket(const UserName& username, const TrainID& train_id, int idx, int dep_idx, const Station& dep_station,
+                  const Time& dep_time, int arr_idx, const Station& arr_station, const Time& arr_time, int price,
+                  int num, bool accept_queue, int timestamp);
+    void QueryOrders(const UserName& username);
+    void RefundTicket(const UserName& username, int order_idx);
+    void Clear();
+    ~TicketSystem();
+  };
+  ```
+
+- `UserSystem`类
+  
+  主体类，实现了与用户相关的指令的执行。
+
+  接口说明：
+  ```c++
+  class UserSystem {
+  private:
+    linked_hashmap<string, bool> online_status_;
+    bpTree<UserName, User> users_;
+
+  public:
+    UserSystem();
+    void AddUser(const string& username, const string& name, const string& password, const string& mail_addr,
+                int privilege);
+    void Login(const string& username, const string& password);
+    void Logout(const string& username);
+    User QueryProfile(const string& username);
+    void ModifyProfile(const User& ori_val, const User& val);
+    bool IsOnline(const string& username);
+    bool CheckFirst();
+    void Clear();
+    ~UserSystem();
+  };
+  ```
+
+- `UserSystem`类
+  
+  主体类，实现了与用户相关的指令的执行。
+
+  接口说明：
+  ```c++
+  class UserSystem {
+  private:
+    linked_hashmap<string, bool> online_status_;
+    bpTree<UserName, User> users_;
+
+  public:
+    UserSystem();
+    void AddUser(const string& username, const string& name, const string& password, const string& mail_addr,
+                int privilege);
+    void Login(const string& username, const string& password);
+    void Logout(const string& username);
+    User QueryProfile(const string& username);
+    void ModifyProfile(const User& ori_val, const User& val);
+    bool IsOnline(const string& username);
+    bool CheckFirst();
+    void Clear();
+    ~UserSystem();
+  };
+  ```
+
+- `UserSystem`类
+  
+  主体类，实现了与用户相关的指令的执行。
+
+  接口说明：
+  ```c++
+  class UserSystem {
+  private:
+    linked_hashmap<string, bool> online_status_;
+    bpTree<UserName, User> users_;
+
+  public:
+    UserSystem();
+    void AddUser(const string& username, const string& name, const string& password, const string& mail_addr,
+                int privilege);
+    void Login(const string& username, const string& password);
+    void Logout(const string& username);
+    User QueryProfile(const string& username);
+    void ModifyProfile(const User& ori_val, const User& val);
+    bool IsOnline(const string& username);
+    bool CheckFirst();
+    void Clear();
+    ~UserSystem();
+  };
+  ```
+
+- `UserSystem`类
+  
+  主体类，实现了与用户相关的指令的执行。
+
+  接口说明：
+  ```c++
+  class UserSystem {
+  private:
+    linked_hashmap<string, bool> online_status_;
+    bpTree<UserName, User> users_;
+
+  public:
+    UserSystem();
+    void AddUser(const string& username, const string& name, const string& password, const string& mail_addr,
+                int privilege);
+    void Login(const string& username, const string& password);
+    void Logout(const string& username);
+    User QueryProfile(const string& username);
+    void ModifyProfile(const User& ori_val, const User& val);
+    bool IsOnline(const string& username);
+    bool CheckFirst();
+    void Clear();
+    ~UserSystem();
+  };
   ```

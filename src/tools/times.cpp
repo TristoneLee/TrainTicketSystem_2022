@@ -59,7 +59,6 @@ int Date::operator-(const Date& other) const {
 }
 string Date::ToString() const {  // format : mm-dd
   string ret;
-  ret.resize(6);
   ret.push_back('0' + month / 10);
   ret.push_back('0' + month % 10);
   ret.push_back('-');
@@ -105,6 +104,7 @@ Time& Time::operator+=(int minutes) {
   hour += minute / 60;
   minute %= 60;
   date += hour / 24;
+  hour %= 24;
   return *this;
 }
 Time& Time::operator-=(int minutes) {
@@ -116,6 +116,7 @@ Time& Time::operator-=(int minutes) {
     hour--;
   }
   date -= hour / 24;
+  hour %= 24;
   if (hour < 0) {
     hour += 24;
     date -= 1;
@@ -128,7 +129,6 @@ int Time::operator-(const Time& other) const {
 }
 string Time::ToString() const {  // only output the time hh:mm
   string ret;
-  ret.resize(6);
   ret.push_back('0' + hour / 10);
   ret.push_back('0' + hour % 10);
   ret.push_back(':');

@@ -21,15 +21,7 @@ void TrainTicketSystem::JudgeOnline(const Command& cmd) {
     Assert(user_system.IsOnline(cmd.args['u']), "user is not online");
 }
 bool TrainTicketSystem::CheckFirst() {
-  fstream temp_file(".isfirst", fstream::in | fstream::out | fstream::binary);
-  if (!temp_file) {
-    // create file
-    fstream temp_create_file(".isfirst", fstream::out | fstream::binary);
-    temp_file.close();
-    return true;
-  }
-  temp_file.close();
-  return false;
+  return user_system.CheckFirst();
 }
 void TrainTicketSystem::PrintTrip(const Trip& trip, const string& depart_station, const string& arrive_station) {
   cout << trip.train_id << ' ';
@@ -45,11 +37,13 @@ void TrainTicketSystem::PrintTrip(const Trip& trip, const string& depart_station
 TrainTicketSystem::TrainTicketSystem() {}
 void TrainTicketSystem::Work() {
   while (true) {
+    int timestamp = 0;
     try {
       // judge privilege inside the TrainTicketSystem
       // judge other availablity outsides
       Command now_cmd(std::cin);
-      cout << '[' << now_cmd.timestamp << ']' << ' ';
+      timestamp = now_cmd.timestamp;
+      cout << '[' << timestamp << ']' << ' ';
       if (now_cmd.op == "exit") {
         cout << "bye" << endl;
         break;
@@ -136,22 +130,27 @@ void TrainTicketSystem::Work() {
         const string& train_id = now_cmd.args['i'];
         Date date(now_cmd.args['d']);
         Train train = train_system.QueryTrain(train_id);
-        int idx = train.sale_date - date;
+        int idx = date - train.sale_date;
         Assert(idx >= 0 && idx < train.sale_duration, "query_train fail: date not in sale_date");
-        Seats seat = ticket_system.QuerySeats(train_id, idx);
-        cout << train_id << train.type << endl;
-        cout << "xx-xx xx:xx"
-             << " -> " << train.LeavingTime(0, idx) << ' ';
+        Seats seat(train.seat_num);
+        if (train.released) seat = ticket_system.QuerySeats(train_id, idx);
+        cout << train_id << ' ' << train.type << endl;
+        cout << train.station_list[0] << ' ';
+        cout << "xx-xx xx:xx -> ";
+        cout << train.LeavingTime(0, idx) << ' ';
         cout << 0 << ' ';
         cout << seat.QuerySeat(0, 1) << endl;
         for (int station_idx = 1; station_idx < train.station_num - 1; ++station_idx) {
-          cout << train.ArrivingTime(station_idx, idx) << " -> " << train.LeavingTime(station_idx, idx) << ' ';
+          cout << train.station_list[station_idx] << ' ';
+          cout << train.ArrivingTime(station_idx, idx) << " -> ";
+          cout << train.LeavingTime(station_idx, idx) << ' ';
           cout << train.price_prefix[station_idx] << ' ';
           cout << seat.QuerySeat(station_idx, station_idx + 1) << endl;
         }
         // output the terminal station
-        cout << train.ArrivingTime(train.station_num - 1, idx) << " -> "
-             << "xx-xx xx:xx" << ' ';
+        cout << train.station_list[train.station_num - 1] << ' ';
+        cout << train.ArrivingTime(train.station_num - 1, idx) << " -> ";
+        cout << "xx-xx xx:xx ";
         cout << train.price_prefix[train.station_num - 1] << ' ';
         cout << 'x' << endl;
       }
@@ -176,6 +175,10 @@ void TrainTicketSystem::Work() {
         bool sort_by_time = true;
         if (now_cmd.args.count('p') && now_cmd.args['p'] == "cost") sort_by_time = false;
         auto transfer_trip = train_system.QueryTransfer(depart_station, arrive_station, date, sort_by_time);
+        if (!transfer_trip.transfer_station.Length()) {
+          cout << '0' << endl;
+          continue;
+        }
         PrintTrip(transfer_trip.trips[0], depart_station, transfer_trip.transfer_station);
         PrintTrip(transfer_trip.trips[1], transfer_trip.transfer_station, arrive_station);
       }
@@ -188,7 +191,10 @@ void TrainTicketSystem::Work() {
         const string& dep_station = now_cmd.args['f'];
         const string& arr_station = now_cmd.args['t'];
         int dep_idx = train.FindStation(dep_station);
+        Assert(dep_idx != Train::NIDX, "buy_ticket fail: dep_station not in train");
         int arr_idx = train.FindStation(arr_station);
+        Assert(arr_idx != Train::NIDX, "buy_ticket fail: arr_station not in train");
+        Assert(dep_idx < arr_idx, "buy_ticket fail: dep_station not before arr_station");
         int buy_num = ToInt(now_cmd.args['n']);
         Assert(buy_num < train.seat_num, "buy_ticket fail: not enough seats");
         int train_idx = train.FindLeavingTrain(dep_idx, date);
@@ -199,7 +205,7 @@ void TrainTicketSystem::Work() {
         bool accept_queue = false;
         if (now_cmd.args.count('q') && now_cmd.args['q'] == "true") accept_queue = true;
         bool stat = ticket_system.BuyTicket(user_name, train_id, train_idx, dep_idx, dep_station, dep_time, arr_idx,
-                                            arr_station, arr_time, price, buy_num, accept_queue, now_cmd.timestamp);
+                                            arr_station, arr_time, price, buy_num, accept_queue, timestamp);
         if (stat)
           cout << price * buy_num << endl;
         else {
@@ -224,14 +230,19 @@ void TrainTicketSystem::Work() {
         // TODO
       }
       if (now_cmd.op == "clean") {
-        // TODO
+        // ~user_system;
+        // user_system.Clear();
+        // train_system.Clear();
+        // ticket_system.Clear();
       }
     } catch (const char* msg) {
       cout << "-1" << endl;
-      cerr << msg << endl;
+      // cerr << '[' << timestamp << ']' << ' ';
+      // cerr << msg << endl;
     } catch (...) {
       cout << "-1" << endl;
-      cerr << "unknown error" << endl;
+      // cerr << '[' << timestamp << ']' << ' ';
+      // cerr << "unknown error" << endl;
     }
     // cout << now_cmd.op << endl;
     // cout << "arglist:" << endl;

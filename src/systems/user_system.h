@@ -20,6 +20,8 @@ class UserSystem {
   User QueryProfile(const string& username);
   void ModifyProfile(const User& ori_val, const User& val);
   bool IsOnline(const string& username);
+  bool CheckFirst();
+  void Clear();
   ~UserSystem();
 };
 }  // namespace sjtu

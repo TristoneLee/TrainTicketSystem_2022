@@ -21,6 +21,7 @@ class TrainSystem {
   Train QueryTrain(const string& train_id);
   vector<Trip> QueryTicket(const string& depart_station, const string& arrive_station, Date date);
   TransferTrip QueryTransfer(const string& depart_station, const string& arrive_station, Date date, bool SortByTime);
+  void Clear();
   ~TrainSystem();
 };
 }  // namespace sjtu

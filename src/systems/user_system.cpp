@@ -36,6 +36,13 @@ void UserSystem::ModifyProfile(const User& ori_val, const User& new_val) {
   users_.insert(new_val.username, new_val);
 }
 bool UserSystem::IsOnline(const string& username) { return online_status_.count(username); }
+bool UserSystem::CheckFirst() {
+  return users_.size() == 0;
+}
+void UserSystem::Clear() {
+      online_status_.clear();
+      users_.clear();
+}
 UserSystem::~UserSystem() = default;
-}  // namespace sjtu
+  }     // namespace sjtu
 #endif  // TRAINTICKETSYSTEM_2022_SRC_SYSTEMS_USER_SYSTEM_CPP

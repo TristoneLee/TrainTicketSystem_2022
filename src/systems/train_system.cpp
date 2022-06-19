@@ -69,7 +69,7 @@ vector<Trip> TrainSystem::QueryTicket(const string& depart_station, const string
       if (train_idx != Train::NIDX) {
         // the train is on sale on date
         Time depart_time = train.LeavingTime(depart_station_idx, train_idx);
-        Time arrive_time = train.ArrivingTime(depart_station_idx, train_idx);
+        Time arrive_time = train.ArrivingTime(arrive_station_idx, train_idx);
         int cost = train.GetPrice(depart_station_idx, arrive_station_idx);
         ret.push_back(
             Trip(train.train_id, depart_time, arrive_time, train_idx, depart_station_idx, arrive_station_idx, cost));
@@ -103,6 +103,8 @@ TransferTrip TrainSystem::QueryTransfer(const string& depart_station, const stri
   for (; idx_dep < lst_dep; idx_dep++) {
     Train dep_train = trains_.query(depart_station_pass[idx_dep].train_id).front();
     const int& depart_station_idx = depart_station_pass[idx_dep].idx;
+    // the depart station is the terminal station of dep_train
+    if (depart_station_idx == dep_train.station_num - 1) continue;
     // can be used to find whether the station is in the train and where it is
     linked_hashmap<Station, int, StationHash> station_idx_map;
     for (int i = depart_station_idx + 1; i < dep_train.station_num; ++i) station_idx_map[dep_train.station_list[i]] = i;
@@ -110,6 +112,8 @@ TransferTrip TrainSystem::QueryTransfer(const string& depart_station, const stri
     if (dep_train_idx == Train::NIDX) continue;  // train is not on sale on date
     Time dep_train_leaving_time = dep_train.LeavingTime(depart_station_idx, dep_train_idx);
     for (idx_arr = 0; idx_arr < lst_arr; idx_arr++) {
+      // the arr_train is the same as the dep_train
+      if (arrive_station_pass[idx_arr].train_id == dep_train.train_id) continue;
       Train arr_train = trains_.query(arrive_station_pass[idx_arr].train_id).front();
       const int& arrive_station_idx = arrive_station_pass[idx_arr].idx;
       for (int i = 0; i < arrive_station_idx; ++i)
@@ -132,11 +136,14 @@ TransferTrip TrainSystem::QueryTransfer(const string& depart_station, const stri
             TransferTrip now_ans(dep_trip, arr_trip, transfer_station);
             update_ret(now_ans);
           }
-          break;
         }
     }
   }
   return ret;
+}
+void TrainSystem::Clear() {
+  trains_.clear();
+  station_passes_.clear();
 }
 TrainSystem::~TrainSystem() = default;
 }  // namespace sjtu
