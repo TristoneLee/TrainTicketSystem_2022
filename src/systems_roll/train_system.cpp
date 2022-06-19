@@ -147,7 +147,7 @@ void TrainSystem::Clear() {
 }
 void TrainSystem::ModifyTimestamp(int timestamp) { timestamp_ = timestamp; }
 void TrainSystem::Rollback(int timestamp) {
-  trains_.roll(timestamp_);
+  trains_.roll(timestamp);
   station_passes_.roll(timestamp);
 }
 TrainSystem::~TrainSystem() = default;

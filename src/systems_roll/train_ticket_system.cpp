@@ -46,6 +46,9 @@ void TrainTicketSystem::Work() {
         cout << "bye" << endl;
         break;
       }
+      user_system.ModifyTimestamp(timestamp);
+      train_system.ModifyTimestamp(timestamp);
+      ticket_system.ModifyTimestamp(timestamp);
       JudgeOnline(now_cmd);
       if (now_cmd.op == "add_user") {
         // check privilege
@@ -205,7 +208,7 @@ void TrainTicketSystem::Work() {
         bool stat = ticket_system.BuyTicket(user_name, train_id, train_idx, dep_idx, dep_station, dep_time, arr_idx,
                                             arr_station, arr_time, price, buy_num, accept_queue, timestamp);
         if (stat)
-          cout << price * buy_num << endl;
+          cout << (long long)(price) * buy_num << endl;
         else {
           if (accept_queue)
             cout << "queue" << endl;

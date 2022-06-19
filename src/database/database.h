@@ -309,7 +309,7 @@ namespace sjtu {
 
         sjtu::vector<Value> query(Key key);
 
-        int insert(Key key, Value value, int time = -1);
+        int insert(Key key, Value value, int time);
 
         int rollbackInsert(Key key, Value value, int pos);
 
@@ -464,6 +464,7 @@ namespace sjtu {
         arrayDocument.read(curArray, curNode.children[posInNode]);
         int posInArray = binarySearch(curArray.data, 0, curArray.arraySiz, obj);
         if (curArray.data[posInArray] != obj) return false;
+        if (time > 0) rollback.push(time, 2, curArray.data[posInArray].pos);
         for (int i = posInArray; i <= curArray.arraySiz - 2; ++i) curArray.data[i] = curArray.data[i + 1];
         if (posInArray == 0 && posInNode != 0) curNode.indexes[posInNode - 1] = curArray.data[0];
         else if (posInNode == 0 && posInArray == 0)indexUpdate(curNode, curArray.data[0]);
@@ -472,7 +473,6 @@ namespace sjtu {
         if (curNode.loc != root.loc) nodeDocument.update(curNode, curNode.loc);
         else root = curNode;
         --siz;
-        if (time > 0)rollback.push(time, 2, curNode.children[posInNode]);
         if (curArray.arraySiz < MIN_DATA) arrayAdoption(curNode, curArray, posInNode);
         return true;
     }
@@ -960,7 +960,7 @@ namespace sjtu {
     void bpTree<Key, Value, HashType, HashFunc, KeyCompare, HashCompare>::roll(int spTime) {
         rollback.logFile.open(rollback.name + "Logfile.dat");
         rollback.modStack.open(rollback.name + "ModStack.dat");
-        while (true) {
+        while (rollback.logSiz) {
             rollback.logFile.seekp(4 + (rollback.logSiz-1) * sizeof(Log));
             Log curLog;
             rollback.logFile.read(reinterpret_cast<char *>(&curLog), sizeof(Log));
@@ -985,6 +985,8 @@ namespace sjtu {
                 storageDocument.update(curPair, curLog.obj);
             }
         }
+        rollback.logFile.close();
+        rollback.modStack.close();
     }
 
     template<class Key, class Value, class HashType, class HashFunc, class KeyCompare, class HashCompare>

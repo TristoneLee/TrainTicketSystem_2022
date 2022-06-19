@@ -14,9 +14,9 @@ int main() {
   // freopen("stdout.txt", "w", stdout);
 #endif
   sjtu::bpTree<sjtu::UserName, sjtu::User> a("a");
-  a.insert("I_am_the_admin", sjtu::User());
-  a.insert("Croissant", sjtu::User());
-  a.insert("Mayer", sjtu::User());
+  // a.insert("I_am_the_admin", sjtu::User());
+  // a.insert("Croissant", sjtu::User());
+  // a.insert("Mayer", sjtu::User());
   auto ret = a.query("Mayer");
   cout << ret.size() << endl;
   return 0;

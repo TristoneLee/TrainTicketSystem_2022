@@ -32,7 +32,7 @@ public:
     string name;
     int logSiz = 0;
     int modSiz = 0;
-    Rollback(string s) {
+    Rollback(string s) : name(s) {
         logFile.open(name + "Logfile.dat");
         if (logFile) {
             logFile.seekg(0);
@@ -48,7 +48,7 @@ public:
         modStack.open(name + "ModStack.dat");
         if (modStack) {
             modStack.seekg(0);
-            modStack.read(reinterpret_cast<char *>(&logSiz), sizeof(int));
+            modStack.read(reinterpret_cast<char *>(&modSiz), sizeof(int));
             modStack.close();
         } else {
             modStack.clear();
