@@ -12,12 +12,12 @@ Seats::Seats(int seat_number) {
 }
 Seats::Seats(const Seats& other) = default;
 void Seats::Modify(int depart_idx, int arrive_idx, int num) {
-  Assert(0 >= depart_idx && depart_idx < arrive_idx, "query_seat fail : range error");
+  Assert(0 <= depart_idx && depart_idx < arrive_idx, "query_seat fail : range error");
   for (int i = depart_idx; i < arrive_idx; i++) remain_seats[i] += num;
   return;
 }
 int Seats::QuerySeat(int depart_idx, int arrive_idx) const {
-  Assert(0 >= depart_idx && depart_idx < arrive_idx, "query_seat fail : range error");
+  Assert(0 <= depart_idx && depart_idx < arrive_idx, "query_seat fail : range error");
   int ret = 100000;
   for (int i = depart_idx; i < arrive_idx; i++) ret = min(ret, remain_seats[i]);
   return ret;

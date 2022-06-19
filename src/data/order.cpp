@@ -33,6 +33,7 @@ ostream& operator<<(ostream& os, const Order& order) {
   os << order.train_id << ' ';
   os << order.depart_station << ' ';
   os << order.depart_time << ' ';
+  os << "-> ";
   os << order.arrive_station << ' ';
   os << order.arrive_time << ' ';
   os << order.price << ' ';

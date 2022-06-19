@@ -30,10 +30,18 @@ bool TicketSystem::BuyTicket(const UserName& username, const TrainID& train_id, 
   Seats seats = (*seats_iter).valueOf();
   Order order(train_id, idx, dep_station, dep_idx, dep_time, arr_station, arr_idx, arr_time, price, num, timestamp);
   bool ret;
-  if (seats.QuerySeat(dep_idx, arr_idx) <= num) {
+  if (seats.QuerySeat(dep_idx, arr_idx) >= num) {
     seats.BuyTicket(dep_idx, arr_idx, num);
     seats_.valueUpdate(seats_iter, seats);
     ret = true;
+    // if (train_id.ToString() == "LeavesofGrass" && idx == 30) {
+    //   std::cerr << "detected!" << endl;
+    //   seats_iter = seats_.find(train_idx);
+    //   seats_iter.fuck();
+    //   std::cerr << '[' << (*seats_iter).keyOf().train_id << ',' << (*seats_iter).keyOf().idx << ']' << endl;
+    //   for (int i = 0; i <= 16; ++i) std::cerr << seats.remain_seats[i] << '\t';
+    //   std::cerr << endl;
+    // }
   } else {
     if (!accept_queue) return false;
     order.status = Order::kPending;
@@ -58,6 +66,10 @@ void TicketSystem::RefundTicket(const UserName& username, int order_idx) {
   Assert(user_orders.size() >= order_idx, "refund fail: order index out of range");
   OrderIter refunded_order_pos = user_orders[order_idx - 1];
   Order refunded_order = train_orders_.dirRead(refunded_order_pos.pos);
+  // if (refunded_order.train_id.ToString() == "LeavesofGrass" && refunded_order.train_idx == 30) {
+  //   std::cerr << "ddetected!" << endl;
+  //   // std::cerr << endl;
+  // }
   Assert(refunded_order.status != Order::kRefunded, "refund fail: order has already been refunded");
   bool refund_order_success = (refunded_order.status == Order::kSuccess);
   refunded_order.status = Order::kRefunded;
@@ -71,9 +83,9 @@ void TicketSystem::RefundTicket(const UserName& username, int order_idx) {
   Seats seats = (*seats_iter).valueOf();
   seats.RefundTicket(refunded_order.dep_idx, refunded_order.arr_idx, refunded_order.num);
   for (auto influenced_order_iter = train_orders_.find(train_index);
-       !influenced_order_iter.ifEnd() && (*influenced_order_iter).keyOf().train_id == train_id;
-       ++influenced_order_iter) {
+       !influenced_order_iter.ifEnd() && (*influenced_order_iter).keyOf() == train_index; ++influenced_order_iter) {
     Order influenced_order = (*influenced_order_iter).valueOf();
+    // std::cerr << "judging: " << influenced_order << std::endl;
     if (influenced_order.status != Order::kPending) continue;
     int now_dep_idx = influenced_order.dep_idx;
     int now_arr_idx = influenced_order.arr_idx;
@@ -82,7 +94,10 @@ void TicketSystem::RefundTicket(const UserName& username, int order_idx) {
     seats.BuyTicket(now_dep_idx, now_arr_idx, now_num);
     influenced_order.status = Order::kSuccess;
     train_orders_.valueUpdate(influenced_order_iter, influenced_order);
+    // std::cerr << "Refunded: " << influenced_order << std::endl;
+    // std::cerr << "now seats: " << seats.QuerySeat(now_dep_idx, now_arr_idx) << std::endl;
   }
+  seats_.valueUpdate(seats_iter, seats);
   return;
 }
 TicketSystem::~TicketSystem() = default;
