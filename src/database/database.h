@@ -197,6 +197,7 @@ namespace sjtu {
             int children[MAX_CHILD]{};
 
             bpNode();
+            bpNode& operator=(const bpNode &rhs) = default;
         };
 
         class array {
