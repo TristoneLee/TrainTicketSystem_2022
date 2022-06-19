@@ -745,6 +745,9 @@ namespace sjtu {
         nodeDocument.read(nxtNode, 17556);
         while (!curNode.isLeaf) {
             int posInNode = keySearch(curNode.indexes, 0, curNode.nodeSiz, key);
+            bpNode nxtNode;
+            nodeDocument.read(nxtNode, curNode.children[posInNode+1]);
+            // curNode = nxtNode;
             nodeDocument.read(curNode, curNode.children[posInNode]);
         }
         int posInNode = keySearch(curNode.indexes, 0, curNode.nodeSiz, key);
