@@ -180,7 +180,7 @@ namespace sjtu {
         };
 
     private:
-        static const int DEGREE = 40;
+        static const int DEGREE = 100;
         static const int MIN_KEY = DEGREE - 1;
         static const int MAX_KEY = 2 * DEGREE - 1;
         static const int MIN_CHILD = DEGREE;
