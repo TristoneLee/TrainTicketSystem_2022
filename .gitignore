@@ -1,4 +1,8 @@
 cmake-build-*/
+build
+runtime
+.vscode
+Temp
 .idea/
 *.dat
 code
