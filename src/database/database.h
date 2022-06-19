@@ -264,7 +264,7 @@ namespace sjtu {
         };
 
         class Cache {
-            static const int cacheSize = 50;
+            static const int cacheSize = 200;
 
             friend class bpTree;
 
@@ -981,10 +981,10 @@ namespace sjtu {
             arrayDocument.read(curArray, curArray.next);
             ++posInNode;
             posInArray = binarySearch(curArray.data, 0, curArray.arraySiz, key);
-            if(compare(curArray.data[posInArray].key,key)||compare(key,curArray.data[posInArray].key)) return iterator(0,0,-1,0,this);
+            if(keyCompare(curArray.data[posInArray].key,key)||keyCompare(key,curArray.data[posInArray].key)) return iterator(0,0,-1,0,this);
             else return iterator(curArray.next, tmp, posInArray, curArray.arraySiz, this);
         }
-        if(compare(curArray.data[posInArray].key,key)||compare(key,curArray.data[posInArray].key)) return iterator(0,0,-1,0,this);
+        if(keyCompare(curArray.data[posInArray].key,key)||keyCompare(key,curArray.data[posInArray].key)) return iterator(0,0,-1,0,this);
         else return iterator(curArray.next, curNode.children[posInNode], posInArray, curArray.arraySiz, this);
     }
 
