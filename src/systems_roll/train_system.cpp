@@ -24,13 +24,12 @@ void TrainSystem::DeleteTrain(const string& train_id) {
   return;
 }
 Train TrainSystem::ReleaseTrain(const string& train_id) {
-  auto find_result = trains_.query(train_id);
-  Assert(!find_result.empty(), "release_train fail : train does not exists");
-  Train train = find_result.front();
+  auto train_iter = trains_.find(train_id);
+  Assert(!train_iter.ifEnd(), "release_train fail : train does not exists");
+  Train train = (*train_iter).valueOf();
   Assert(!train.released, "release_train fail : train is already released");
-  trains_.erase(train_id, train, timestamp_);
   train.released = true;
-  trains_.insert(train_id, train, timestamp_);
+  trains_.valueUpdate(train_iter, train,timestamp_);
   // add the train to all the stations it passes
   for (int idx = 0; idx < train.station_num; ++idx) {
     const Station& now_station = train.station_list[idx];
@@ -40,9 +39,9 @@ Train TrainSystem::ReleaseTrain(const string& train_id) {
   return train;
 }
 Train TrainSystem::QueryTrain(const string& train_id) {
-  auto find_result = trains_.query(train_id);
-  Assert(!find_result.empty(), "query_train fail : train does not exists");
-  return find_result.front();
+  auto train_iter = trains_.find(train_id);
+  Assert(!train_iter.ifEnd(), "query_train fail : train does not exists");
+  return (*train_iter).valueOf();
 }
 vector<Trip> TrainSystem::QueryTicket(const string& depart_station, const string& arrive_station, Date date) {
   auto depart_station_pass = station_passes_.query(depart_station);
