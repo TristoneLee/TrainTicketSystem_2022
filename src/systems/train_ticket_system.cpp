@@ -140,7 +140,8 @@ void TrainTicketSystem::Work() {
         Train train = train_system.QueryTrain(train_id);
         int idx = date - train.sale_date;
         Assert(idx >= 0 && idx < train.sale_duration, "query_train fail: date not in sale_date");
-        Seats seat = ticket_system.QuerySeats(train_id, idx);
+        Seats seat(train.seat_num);
+        if (train.released) seat = ticket_system.QuerySeats(train_id, idx);
         cout << train_id << ' ' << train.type << endl;
         cout << train.station_list[0] << ' ';
         cout << "xx-xx xx:xx -> ";
@@ -237,7 +238,10 @@ void TrainTicketSystem::Work() {
         // TODO
       }
       if (now_cmd.op == "clean") {
-        // TODO
+        ~user_system;
+        // user_system.Clean();
+        // train_system.Clean();
+        // ticket_system.Clean();
       }
     } catch (const char* msg) {
       cout << "-1" << endl;
