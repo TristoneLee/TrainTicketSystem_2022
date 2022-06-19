@@ -419,6 +419,7 @@ namespace sjtu {
             array tem(obj, 0);
             head = root.children[0] = arrayDocument.write(tem);
             ++siz;
+             if (time > 0) rollback.push(time, 1, valuePos);
             return valuePos;
         }
         bpNode curNode = root;
@@ -968,11 +969,11 @@ namespace sjtu {
             if (curLog.op == 1) {
                 storagePair curPair;
                 storageDocument.read(curPair, curLog.obj);
-                erase(curPair.key, curPair.value);
+                rollbackErase(curPair.key, curPair.value);
             } else if (curLog.op == 2) {
                 storagePair curPair;
                 storageDocument.read(curPair, curLog.obj);
-                insert(curPair.key, curPair.value);
+                rollbackInsert(curPair.key, curPair.value,curLog.obj);
             } else if (curLog.op == 3) {
                 --rollback.modSiz;
                 rollback.modStack.seekp(4 + rollback.modSiz * sizeof(Value));

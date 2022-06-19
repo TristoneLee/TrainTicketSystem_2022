@@ -24,14 +24,14 @@ private:
     enum operation {
         insert, erase, modify
     };
+
+
+public:
     fstream logFile;
     fstream modStack;
     string name;
     int logSiz = 0;
     int modSiz = 0;
-
-
-public:
     Rollback(string s) {
         logFile.open(name + "Logfile.dat");
         if (logFile) {
