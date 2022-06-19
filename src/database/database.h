@@ -308,11 +308,11 @@ namespace sjtu {
 
         sjtu::vector<Value> query(Key key);
 
-        int insert(Key key, Value value, int time);
+        int insert(Key key, Value value, int time=-1);
 
         int rollbackInsert(Key key, Value value, int pos);
 
-        bool erase(Key key, Value value, int time);
+        bool erase(Key key, Value value, int time=-1);
 
         int rollbackErase(Key key, Value value);
 
