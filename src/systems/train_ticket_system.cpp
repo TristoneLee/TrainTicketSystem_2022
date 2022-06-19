@@ -237,12 +237,12 @@ void TrainTicketSystem::Work() {
       }
     } catch (const char* msg) {
       cout << "-1" << endl;
-      cerr << '[' << timestamp << ']' << ' ';
-      cerr << msg << endl;
+      // cerr << '[' << timestamp << ']' << ' ';
+      // cerr << msg << endl;
     } catch (...) {
       cout << "-1" << endl;
-      cerr << '[' << timestamp << ']' << ' ';
-      cerr << "unknown error" << endl;
+      // cerr << '[' << timestamp << ']' << ' ';
+      // cerr << "unknown error" << endl;
     }
     // cout << now_cmd.op << endl;
     // cout << "arglist:" << endl;
