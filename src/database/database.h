@@ -320,7 +320,7 @@ namespace sjtu {
 
         void clear();
 
-        void valueUpdate(iterator iter, Value newValue, int time);
+        void valueUpdate(iterator iter, Value newValue, int time = -1);
 
         Value dirRead(int pos);
 
