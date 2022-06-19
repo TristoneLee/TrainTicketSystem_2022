@@ -100,6 +100,11 @@ void TicketSystem::RefundTicket(const UserName& username, int order_idx) {
   seats_.valueUpdate(seats_iter, seats);
   return;
 }
+void TicketSystem::Clear() {
+  seats_.clear();
+  train_orders_.clear();
+  user_orders_.clear();
+}
 TicketSystem::~TicketSystem() = default;
 }  // namespace sjtu
 #endif  // TRAINTICKETSYSTEM_2022_SRC_SYSTEMS_TICKET_SYSTEM_CPP

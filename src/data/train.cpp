@@ -62,7 +62,8 @@ int Train::FindLeavingTrainAfter(int station_idx, const Time& time) const {
   Time start_leaving_time = LeavingTime(station_idx);
   if (time < start_leaving_time) return 0;  // wait for sale begin
   int ret = time.date - start_leaving_time.date;
-  Time now_leaving_time = start_leaving_time + ret;
+  Time now_leaving_time = start_leaving_time;
+  now_leaving_time.date += ret;
   if (now_leaving_time < time) ++ret;
   if (ret >= sale_duration) return NIDX;
   return ret;
