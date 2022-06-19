@@ -8,7 +8,7 @@ namespace sjtu {
 class TicketSystem {
  private:
   bpTree<TrainIndex, Seats> seats_;
-  bpTree<TrainIndex, Order, int, OrderHash, std::less<TrainIndex>, std::greater<int>> train_orders_;
+  bpTree<TrainIndex, Order, int, OrderHash> train_orders_;
   bpTree<UserName, OrderIter, int, OrderIterHash, std::less<UserName>, std::greater<int>> user_orders_;
 
  public:

@@ -69,7 +69,7 @@ vector<Trip> TrainSystem::QueryTicket(const string& depart_station, const string
       if (train_idx != Train::NIDX) {
         // the train is on sale on date
         Time depart_time = train.LeavingTime(depart_station_idx, train_idx);
-        Time arrive_time = train.ArrivingTime(depart_station_idx, train_idx);
+        Time arrive_time = train.ArrivingTime(arrive_station_idx, train_idx);
         int cost = train.GetPrice(depart_station_idx, arrive_station_idx);
         ret.push_back(
             Trip(train.train_id, depart_time, arrive_time, train_idx, depart_station_idx, arrive_station_idx, cost));

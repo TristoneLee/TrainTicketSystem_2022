@@ -37,7 +37,7 @@ int Train::GetPrice(int depart_idx, int terminal_idx) const {
   return price_prefix[terminal_idx] - price_prefix[depart_idx];
 }
 int Train::FindStation(const Station& station_name) const {
-  for (int idx; idx < station_num; ++idx)
+  for (int idx = 0; idx < station_num; ++idx)
     if (station_list[idx] == station_name) return idx;
   return NIDX;
 }

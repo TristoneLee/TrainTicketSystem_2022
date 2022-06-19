@@ -882,9 +882,11 @@ namespace sjtu {
         arrayDocument.read(curArray, curNode.children[posInNode]);
         int posInArray = binarySearch(curArray.data, 0, curArray.arraySiz, key);
         if (posInArray == curArray.arraySiz) {
+            int tmp = curArray.next;
             arrayDocument.read(curArray, curArray.next);
             ++posInNode;
             posInArray = binarySearch(curArray.data, 0, curArray.arraySiz, key);
+        return iterator(curArray.next, tmp, posInArray, curArray.arraySiz, this);
         }
         return iterator(curArray.next, curNode.children[posInNode], posInArray, curArray.arraySiz, this);
     }
