@@ -90,8 +90,8 @@ namespace sjtu {
 
         int countOf() { return count; }
 
-        void clear(){
-            count=0;
+        void clear() {
+            count = 0;
             file.clear();
             file.open(file_name, std::fstream::out);
             file.seekp(0);
@@ -308,11 +308,11 @@ namespace sjtu {
 
         sjtu::vector<Value> query(Key key);
 
-        int insert(Key key, Value value, int time=-1);
+        int insert(Key key, Value value, int time = -1);
 
         int rollbackInsert(Key key, Value value, int pos);
 
-        bool erase(Key key, Value value, int time=-1);
+        bool erase(Key key, Value value, int time = -1);
 
         int rollbackErase(Key key, Value value);
 
@@ -402,7 +402,7 @@ namespace sjtu {
         siz = 0;
         head = 0;
         bpNode tem();
-        root=tem;
+        root = tem;
         root.isLeaf = true;
         locOfRoot = root.loc = nodeDocument.write(root);
     }
@@ -442,7 +442,7 @@ namespace sjtu {
         if (curNode.loc != root.loc) nodeDocument.update(curNode, curNode.loc);
         else root = curNode;
         ++siz;
-        if(time>0) rollback.push(time, 1, valuePos);
+        if (time > 0) rollback.push(time, 1, valuePos);
         if (curArray.arraySiz == MAX_DATA) arraySplit(curNode, curArray, posInNode);
         return valuePos;
     }
@@ -470,7 +470,7 @@ namespace sjtu {
         if (curNode.loc != root.loc) nodeDocument.update(curNode, curNode.loc);
         else root = curNode;
         --siz;
-        if(time>0)rollback.push(time, 2, curNode.children[posInNode]);
+        if (time > 0)rollback.push(time, 2, curNode.children[posInNode]);
         if (curArray.arraySiz < MIN_DATA) arrayAdoption(curNode, curArray, posInNode);
         return true;
     }
@@ -531,34 +531,33 @@ namespace sjtu {
             bpNode faNode;
             if (curNode.parent == root.loc) faNode = root;
             else nodeDocument.read(faNode, curNode.parent);
-            if (faNode.nodeSiz == MAX_KEY) nodeSplit(faNode), nodeSplit(curNode);
-            else {
-                bpNode newNode;
-                newNode.isLeaf = curNode.isLeaf;
-                newNode.nodeSiz = MIN_KEY;
-                newNode.parent = curNode.parent;
-                curNode.nodeSiz = MIN_KEY;
-                for (int i = 0; i < MIN_KEY; ++i) newNode.indexes[i] = curNode.indexes[i + MIN_KEY + 1];
-                for (int i = 0; i < MIN_CHILD; ++i) newNode.children[i] = curNode.children[i + MIN_CHILD];
-                int pos = noOrderSearch(faNode.children, 0, faNode.nodeSiz, curNode.loc);
-                for (int i = faNode.nodeSiz + 1; i > pos + 1; --i) faNode.children[i] = faNode.children[i - 1];
-                newNode.loc = faNode.children[pos + 1] = nodeDocument.write(newNode);
-                for (int i = faNode.nodeSiz; i > pos; --i) faNode.indexes[i] = faNode.indexes[i - 1];
-                ++faNode.nodeSiz;
-                faNode.indexes[pos] = curNode.indexes[MIN_KEY];
-                nodeDocument.update(newNode, newNode.loc);
-                nodeDocument.update(curNode, curNode.loc);
-                if (faNode.loc == root.loc) root = faNode;
-                else nodeDocument.update(faNode, faNode.loc);
-                if (!newNode.isLeaf) {
-                    bpNode tem;
-                    for (int i = 0; i <= newNode.nodeSiz; ++i) {
-                        nodeDocument.read(tem, newNode.children[i]);
-                        tem.parent = newNode.loc;
-                        nodeDocument.update(tem, tem.loc);
-                    }
+
+            bpNode newNode;
+            newNode.isLeaf = curNode.isLeaf;
+            newNode.nodeSiz = MIN_KEY;
+            newNode.parent = curNode.parent;
+            curNode.nodeSiz = MIN_KEY;
+            for (int i = 0; i < MIN_KEY; ++i) newNode.indexes[i] = curNode.indexes[i + MIN_KEY + 1];
+            for (int i = 0; i < MIN_CHILD; ++i) newNode.children[i] = curNode.children[i + MIN_CHILD];
+            int pos = noOrderSearch(faNode.children, 0, faNode.nodeSiz, curNode.loc);
+            for (int i = faNode.nodeSiz + 1; i > pos + 1; --i) faNode.children[i] = faNode.children[i - 1];
+            newNode.loc = faNode.children[pos + 1] = nodeDocument.write(newNode);
+            for (int i = faNode.nodeSiz; i > pos; --i) faNode.indexes[i] = faNode.indexes[i - 1];
+            ++faNode.nodeSiz;
+            faNode.indexes[pos] = curNode.indexes[MIN_KEY];
+            nodeDocument.update(newNode, newNode.loc);
+            nodeDocument.update(curNode, curNode.loc);
+            if (faNode.loc == root.loc) root = faNode;
+            else nodeDocument.update(faNode, faNode.loc);
+            if (!newNode.isLeaf) {
+                bpNode tem;
+                for (int i = 0; i <= newNode.nodeSiz; ++i) {
+                    nodeDocument.read(tem, newNode.children[i]);
+                    tem.parent = newNode.loc;
+                    nodeDocument.update(tem, tem.loc);
                 }
             }
+            if (faNode.nodeSiz == MAX_KEY) nodeSplit(faNode);
         }
     }
 
@@ -742,6 +741,8 @@ namespace sjtu {
         sjtu::vector<Value> ans;
         if (siz == 0) return ans;
         bpNode curNode = root;
+        bpNode nxtNode;
+        nodeDocument.read(nxtNode, 17556);
         while (!curNode.isLeaf) {
             int posInNode = keySearch(curNode.indexes, 0, curNode.nodeSiz, key);
             nodeDocument.read(curNode, curNode.children[posInNode]);
@@ -919,7 +920,7 @@ namespace sjtu {
         iter.master->arrayDocument.read(tem, iter.pos);
         storagePair pair;
         storageDocument.read(pair, tem.data[iter.num].pos);
-        if(time>0) rollback.push(time, 3, tem.data[iter.num].pos, pair.value);
+        if (time > 0) rollback.push(time, 3, tem.data[iter.num].pos, pair.value);
         pair.value = newValue;
         storageDocument.update(pair, tem.data[iter.num].pos);
     }
@@ -1051,7 +1052,7 @@ namespace sjtu {
         array curArray;
         arrayDocument.read(curArray, curNode.children[posInNode]);
         int posInArray = binarySearch(curArray.data, 0, curArray.arraySiz, obj);
-        iterator iter(curArray.next,curNode.children[posInNode],posInArray,curArray.arraySiz,this);
+        iterator iter(curArray.next, curNode.children[posInNode], posInArray, curArray.arraySiz, this);
         return iter;
     }
 }
