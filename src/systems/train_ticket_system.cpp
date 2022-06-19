@@ -21,15 +21,7 @@ void TrainTicketSystem::JudgeOnline(const Command& cmd) {
     Assert(user_system.IsOnline(cmd.args['u']), "user is not online");
 }
 bool TrainTicketSystem::CheckFirst() {
-  fstream temp_file(".isfirst", fstream::in | fstream::out | fstream::binary);
-  if (!temp_file) {
-    // create file
-    fstream temp_create_file(".isfirst", fstream::out | fstream::binary);
-    temp_file.close();
-    return true;
-  }
-  temp_file.close();
-  return false;
+  return user_system.CheckFirst();
 }
 void TrainTicketSystem::PrintTrip(const Trip& trip, const string& depart_station, const string& arrive_station) {
   cout << trip.train_id << ' ';
@@ -238,10 +230,10 @@ void TrainTicketSystem::Work() {
         // TODO
       }
       if (now_cmd.op == "clean") {
-        ~user_system;
-        // user_system.Clean();
-        // train_system.Clean();
-        // ticket_system.Clean();
+        // ~user_system;
+        // user_system.Clear();
+        // train_system.Clear();
+        // ticket_system.Clear();
       }
     } catch (const char* msg) {
       cout << "-1" << endl;

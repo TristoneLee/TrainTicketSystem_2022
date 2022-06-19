@@ -20,6 +20,7 @@ class TicketSystem {
                  int num, bool accept_queue, int timestamp);
   void QueryOrders(const UserName& username);
   void RefundTicket(const UserName& username, int order_idx);
+  void Clear();
   ~TicketSystem();
 };
 }  // namespace sjtu
