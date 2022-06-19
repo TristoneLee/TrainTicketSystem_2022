@@ -89,6 +89,15 @@ namespace sjtu {
         }
 
         int countOf() { return count; }
+
+        void clear(){
+            count=0;
+            file.clear();
+            file.open(file_name, std::fstream::out);
+            file.seekp(0);
+            file.write(reinterpret_cast<char *>(&count), sizeof(int));
+            file.close();
+        }
     };
 
     template<class Key,
@@ -383,6 +392,22 @@ namespace sjtu {
     }
 
     template<class Key, class Value, class HashType, class HashFunc, class KeyCompare, class HashCompare>
+    void bpTree<Key, Value, HashType, HashFunc, KeyCompare, HashCompare>::clear() {
+        nodeDocument.clear();
+        storageDocument.clear();
+        arrayDocument.clear();
+        basicData.clear();
+        basicData.open(filename + "basicData" + ".dat", fstream::out);
+        basicData.close();
+        siz = 0;
+        head = 0;
+        bpNode tem();
+        root=tem;
+        root.isLeaf = true;
+        locOfRoot = root.loc = nodeDocument.write(root);
+    }
+
+    template<class Key, class Value, class HashType, class HashFunc, class KeyCompare, class HashCompare>
     int bpTree<Key, Value, HashType, HashFunc, KeyCompare, HashCompare>::insert(Key key, Value value, int time) {
         HashType valueHash = hashFunc(value);
         indexPair obj(key, valueHash, 0);
@@ -453,8 +478,6 @@ namespace sjtu {
     template<class Key, class Value, class HashType, class HashFunc, class KeyCompare, class HashCompare>
     int bpTree<Key, Value, HashType, HashFunc, KeyCompare, HashCompare>::size() { return siz; };
 
-    template<class Key, class Value, class HashType, class HashFunc, class KeyCompare, class HashCompare>
-    void bpTree<Key, Value, HashType, HashFunc, KeyCompare, HashCompare>::clear() {}
 
     template<class Key, class Value, class HashType, class HashFunc, class KeyCompare, class HashCompare>
     void bpTree<Key, Value, HashType, HashFunc, KeyCompare, HashCompare>::arraySplit(bpNode &curNode, array &curArray,
