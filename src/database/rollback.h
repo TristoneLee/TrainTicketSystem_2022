@@ -3,6 +3,7 @@
 #include<fstream>
 
 using std::fstream;
+using std::string;
 
 struct Log {
     //时间戳
