@@ -917,9 +917,9 @@ namespace sjtu {
 
     template<class Key, class Value, class HashType, class HashFunc, class KeyCompare, class HashCompare>
     Value bpTree<Key, Value, HashType, HashFunc, KeyCompare, HashCompare>::dirRead(int pos) {
-        Value result;
+        storagePair result;
         storageDocument.read(result, pos);
-        return result;
+        return result.value;
     }
 
     template<class Key, class Value, class HashType, class HashFunc, class KeyCompare, class HashCompare>
@@ -1028,7 +1028,7 @@ namespace sjtu {
         array curArray;
         arrayDocument.read(curArray, curNode.children[posInNode]);
         int posInArray = binarySearch(curArray.data, 0, curArray.arraySiz, obj);
-        iterator iter(curArray.next,curNode.children[posInNode],posInArray,this);
+        iterator iter(curArray.next,curNode.children[posInNode],posInArray,curArray.arraySiz,this);
         return iter;
     }
 }
