@@ -985,7 +985,7 @@ namespace sjtu {
             else return iterator(curArray.next, tmp, posInArray, curArray.arraySiz, this);
         }
         if(compare(curArray.data[posInArray].key,key)||compare(key,curArray.data[posInArray].key)) return iterator(0,0,-1,0,this);
-        eles return iterator(curArray.next, curNode.children[posInNode], posInArray, curArray.arraySiz, this);
+        else return iterator(curArray.next, curNode.children[posInNode], posInArray, curArray.arraySiz, this);
     }
 
     template<class Key, class Value, class HashType, class HashFunc, class KeyCompare, class HashCompare>
