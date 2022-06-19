@@ -109,6 +109,8 @@ namespace sjtu {
     class bpTree {
         friend class indexPair;
 
+        friend class cache;
+
         friend class iterator;
 
     public:
@@ -197,7 +199,8 @@ namespace sjtu {
             int children[MAX_CHILD]{};
 
             bpNode();
-            bpNode& operator=(const bpNode &rhs) = default;
+
+            bpNode &operator=(const bpNode &rhs) = default;
         };
 
         class array {
@@ -260,6 +263,46 @@ namespace sjtu {
             }
         };
 
+        class Cache {
+            static const int cacheSize = 200;
+
+            friend class bpTree;
+
+        private:
+            bpTree *master;
+            int count = 0;
+            int head = 0;
+            bpNode pool[cacheSize];
+
+            Cache() = default;
+
+            ~Cache() {
+                while (count) pop();
+            }
+
+            void pop() {
+                master->nodeDocument.update(pool[head], pool[head].loc);
+                head = (head + 1) % cacheSize;
+                --count;
+            }
+
+            void push(bpNode obj) {
+                if (count == cacheSize) pop();
+                int des = (head + count) % cacheSize;
+                pool[des] = obj;
+            }
+
+            int ifIn(indexPair obj) {
+                for (int i = 0; i < count; ++i) {
+                    int tmp = (i + head) % cacheSize;
+                    if (obj >= pool[tmp].indexes[0] && obj <= pool[tmp].indexes[pool[tmp].nodeSiz - 1])return tmp;
+                }
+                return -1;
+            }
+
+            bpNode findNode(int x) { return pool[x]; }
+        };
+
         bpNode root;
         iofile<array> arrayDocument;
         iofile<bpNode> nodeDocument;
@@ -272,6 +315,7 @@ namespace sjtu {
         static HashCompare hashCompare;
         static HashFunc hashFunc;
         Rollback<Value> rollback;
+        Cache cache;
         std::string filename;
 
 
@@ -419,13 +463,18 @@ namespace sjtu {
             array tem(obj, 0);
             head = root.children[0] = arrayDocument.write(tem);
             ++siz;
-             if (time > 0) rollback.push(time, 1, valuePos);
+            if (time > 0) rollback.push(time, 1, valuePos);
             return valuePos;
         }
         bpNode curNode = root;
-        while (!curNode.isLeaf) {
-            int posInNode = keySearch(curNode.indexes, 0, curNode.nodeSiz, obj);
-            nodeDocument.read(curNode, curNode.children[posInNode]);
+        int des = cache.ifIn(obj);
+        if (des >= 0) {
+            curNode = cache.findNode(des);
+        } else {
+            while (!curNode.isLeaf) {
+                int posInNode = keySearch(curNode.indexes, 0, curNode.nodeSiz, obj);
+                nodeDocument.read(curNode, curNode.children[posInNode]);
+            }
         }
         int posInNode = keySearch(curNode.indexes, 0, curNode.nodeSiz, obj);
         array curArray;
@@ -441,8 +490,13 @@ namespace sjtu {
         curArray.data[posInArray] = obj;
         ++curArray.arraySiz;
         arrayDocument.update(curArray, curNode.children[posInNode]);
-        if (curNode.loc != root.loc) nodeDocument.update(curNode, curNode.loc);
-        else root = curNode;
+        if (des >= 0) { cache.pool[des] = curNode; }
+        else {
+            if (curNode.loc != root.loc) {
+                nodeDocument.update(curNode, curNode.loc);
+                cache.push(curNode);
+            } else root = curNode;
+        }
         ++siz;
         if (time > 0) rollback.push(time, 1, valuePos);
         if (curArray.arraySiz == MAX_DATA) arraySplit(curNode, curArray, posInNode);
@@ -455,9 +509,14 @@ namespace sjtu {
         indexPair obj(key, valueHash, 0);
         if (siz == 0) return false;
         bpNode curNode = root;
-        while (!curNode.isLeaf) {
-            int posInNode = keySearch(curNode.indexes, 0, curNode.nodeSiz, obj);
-            nodeDocument.read(curNode, curNode.children[posInNode]);
+        int des = cache.ifIn(obj);
+        if (des >= 0) {
+            curNode = cache.findNode(des);
+        } else {
+            while (!curNode.isLeaf) {
+                int posInNode = keySearch(curNode.indexes, 0, curNode.nodeSiz, obj);
+                nodeDocument.read(curNode, curNode.children[posInNode]);
+            }
         }
         int posInNode = keySearch(curNode.indexes, 0, curNode.nodeSiz, obj);
         array curArray;
@@ -470,8 +529,13 @@ namespace sjtu {
         else if (posInNode == 0 && posInArray == 0)indexUpdate(curNode, curArray.data[0]);
         --curArray.arraySiz;
         arrayDocument.update(curArray, curNode.children[posInNode]);
-        if (curNode.loc != root.loc) nodeDocument.update(curNode, curNode.loc);
-        else root = curNode;
+        if (des >= 0) { cache.pool[des] = curNode; }
+        else {
+            if (curNode.loc != root.loc) {
+                nodeDocument.update(curNode, curNode.loc);
+                cache.push(curNode);
+            } else root = curNode;
+        }
         --siz;
         if (curArray.arraySiz < MIN_DATA) arrayAdoption(curNode, curArray, posInNode);
         return true;
@@ -743,12 +807,10 @@ namespace sjtu {
         sjtu::vector<Value> ans;
         if (siz == 0) return ans;
         bpNode curNode = root;
-        bpNode nxtNode;
-        nodeDocument.read(nxtNode, 17556);
         while (!curNode.isLeaf) {
             int posInNode = keySearch(curNode.indexes, 0, curNode.nodeSiz, key);
             bpNode nxtNode;
-            nodeDocument.read(nxtNode, curNode.children[posInNode+1]);
+            nodeDocument.read(nxtNode, curNode.children[posInNode + 1]);
             // curNode = nxtNode;
             nodeDocument.read(curNode, curNode.children[posInNode]);
         }
@@ -790,6 +852,7 @@ namespace sjtu {
                 }
             }
         }
+        cache.push(curNode);
         return ans;
     }
 
@@ -905,7 +968,7 @@ namespace sjtu {
         while (!curNode.isLeaf) {
             int posInNode = keySearch(curNode.indexes, 0, curNode.nodeSiz, key);
             bpNode nxtNode;
-            nodeDocument.read(nxtNode, curNode.children[posInNode+1]);
+            nodeDocument.read(nxtNode, curNode.children[posInNode + 1]);
             // curNode = nxtNode;
             nodeDocument.read(curNode, curNode.children[posInNode]);
         }
@@ -918,9 +981,11 @@ namespace sjtu {
             arrayDocument.read(curArray, curArray.next);
             ++posInNode;
             posInArray = binarySearch(curArray.data, 0, curArray.arraySiz, key);
-        return iterator(curArray.next, tmp, posInArray, curArray.arraySiz, this);
+            if(keyCompare(curArray.data[posInArray].key,key)||keyCompare(key,curArray.data[posInArray].key)) return iterator(0,0,-1,0,this);
+            else return iterator(curArray.next, tmp, posInArray, curArray.arraySiz, this);
         }
-        return iterator(curArray.next, curNode.children[posInNode], posInArray, curArray.arraySiz, this);
+        if(keyCompare(curArray.data[posInArray].key,key)||keyCompare(key,curArray.data[posInArray].key)) return iterator(0,0,-1,0,this);
+        else return iterator(curArray.next, curNode.children[posInNode], posInArray, curArray.arraySiz, this);
     }
 
     template<class Key, class Value, class HashType, class HashFunc, class KeyCompare, class HashCompare>
@@ -964,7 +1029,7 @@ namespace sjtu {
             rollback.logFile.seekp(4 + (rollback.logSiz-1) * sizeof(Log));
             Log curLog;
             rollback.logFile.read(reinterpret_cast<char *>(&curLog), sizeof(Log));
-            if(curLog.time<=spTime) break;
+            if (curLog.time <= spTime) break;
             --rollback.logSiz;
             if (curLog.op == 1) {
                 storagePair curPair;
@@ -973,7 +1038,7 @@ namespace sjtu {
             } else if (curLog.op == 2) {
                 storagePair curPair;
                 storageDocument.read(curPair, curLog.obj);
-                rollbackInsert(curPair.key, curPair.value,curLog.obj);
+                rollbackInsert(curPair.key, curPair.value, curLog.obj);
             } else if (curLog.op == 3) {
                 --rollback.modSiz;
                 rollback.modStack.seekp(4 + rollback.modSiz * sizeof(Value));
@@ -1000,7 +1065,7 @@ namespace sjtu {
             array tem(obj, 0);
             head = root.children[0] = arrayDocument.write(tem);
             ++siz;
-            return true;
+            return valuePos;
         }
         bpNode curNode = root;
         while (!curNode.isLeaf) {
@@ -1071,6 +1136,5 @@ namespace sjtu {
         return iter;
     }
 }
-
 
 #endif //TICKET_SYSTEM_DATABASE_H

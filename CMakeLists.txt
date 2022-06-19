@@ -9,7 +9,7 @@ else()
   set(sys_dir systems)
 endif()
 set(lib_dir_names tools stl data FileSystem ${sys_dir} database)
-set(program_names code test)
+set(program_names code)
 
 # -------------------------------------------------------------------
 
