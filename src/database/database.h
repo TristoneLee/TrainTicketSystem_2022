@@ -419,6 +419,7 @@ namespace sjtu {
             array tem(obj, 0);
             head = root.children[0] = arrayDocument.write(tem);
             ++siz;
+            if (time > 0) rollback.push(time, 1, valuePos);
             return valuePos;
         }
         bpNode curNode = root;
@@ -463,6 +464,7 @@ namespace sjtu {
         arrayDocument.read(curArray, curNode.children[posInNode]);
         int posInArray = binarySearch(curArray.data, 0, curArray.arraySiz, obj);
         if (curArray.data[posInArray] != obj) return false;
+        if (time > 0)rollback.push(time, 2, curArray.data[posInArray]);
         for (int i = posInArray; i <= curArray.arraySiz - 2; ++i) curArray.data[i] = curArray.data[i + 1];
         if (posInArray == 0 && posInNode != 0) curNode.indexes[posInNode - 1] = curArray.data[0];
         else if (posInNode == 0 && posInArray == 0)indexUpdate(curNode, curArray.data[0]);
@@ -471,7 +473,6 @@ namespace sjtu {
         if (curNode.loc != root.loc) nodeDocument.update(curNode, curNode.loc);
         else root = curNode;
         --siz;
-        if (time > 0)rollback.push(time, 2, curNode.children[posInNode]);
         if (curArray.arraySiz < MIN_DATA) arrayAdoption(curNode, curArray, posInNode);
         return true;
     }
@@ -968,11 +969,11 @@ namespace sjtu {
             if (curLog.op == 1) {
                 storagePair curPair;
                 storageDocument.read(curPair, curLog.obj);
-                erase(curPair.key, curPair.value);
+                rollbackErase(curPair.key, curPair.value);
             } else if (curLog.op == 2) {
                 storagePair curPair;
                 storageDocument.read(curPair, curLog.obj);
-                insert(curPair.key, curPair.value);
+                rollbackInsert(curPair.key, curPair.value,curLog.obj);
             } else if (curLog.op == 3) {
                 --rollback.modSiz;
                 rollback.modStack.seekp(4 + rollback.modSiz * sizeof(Value));
@@ -997,7 +998,7 @@ namespace sjtu {
             array tem(obj, 0);
             head = root.children[0] = arrayDocument.write(tem);
             ++siz;
-            return true;
+            return valuePos;
         }
         bpNode curNode = root;
         while (!curNode.isLeaf) {
