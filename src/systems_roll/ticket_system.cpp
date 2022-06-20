@@ -61,7 +61,7 @@ void TicketSystem::QueryOrders(const UserName& username) {
   }
   return;
 }
-void TicketSystem::RefundTicket(const UserName& username, int order_idx) {
+Order TicketSystem::RefundTicket(const UserName& username, int order_idx) {
   auto user_orders = user_orders_.query(username);
   Assert(user_orders.size() >= order_idx, "refund fail: order index out of range");
   OrderIter refunded_order_pos = user_orders[order_idx - 1];
@@ -78,7 +78,7 @@ void TicketSystem::RefundTicket(const UserName& username, int order_idx) {
   TrainIndex train_index(train_id, train_idx);
   auto refunded_order_iter = train_orders_.pairFind(train_index, refunded_order);
   train_orders_.valueUpdate(refunded_order_iter, refunded_order, timestamp_);
-  if (!refund_order_success) return;
+  if (!refund_order_success) return Order();
   auto seats_iter = seats_.find(train_index);
   Seats seats = (*seats_iter).valueOf();
   seats.RefundTicket(refunded_order.dep_idx, refunded_order.arr_idx, refunded_order.num);
@@ -98,7 +98,7 @@ void TicketSystem::RefundTicket(const UserName& username, int order_idx) {
     // std::cerr << "now seats: " << seats.QuerySeat(now_dep_idx, now_arr_idx) << std::endl;
   }
   seats_.valueUpdate(seats_iter, seats, timestamp_);
-  return;
+  return refunded_order;
 }
 void TicketSystem::Clear() {
   seats_.clear();

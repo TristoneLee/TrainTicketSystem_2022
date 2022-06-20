@@ -20,7 +20,7 @@ class TicketSystem {
                  const Time& dep_time, int arr_idx, const Station& arr_station, const Time& arr_time, int price,
                  int num, bool accept_queue, int timestamp);
   void QueryOrders(const UserName& username);
-  void RefundTicket(const UserName& username, int order_idx);
+  Order RefundTicket(const UserName& username, int order_idx);
   void Clear();
   void ModifyTimestamp(int timestamp);
   void Rollback(int timestamp);

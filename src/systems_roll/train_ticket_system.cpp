@@ -16,9 +16,9 @@ using std::endl;
 namespace sjtu {
 void TrainTicketSystem::JudgeOnline(const Command& cmd) {
   if (cmd.op == "query_profile" || cmd.op == "modify_profile")
-    Assert(user_system.IsOnline(cmd.args['c']), "user is not online");
+    Assert(user_system.IsOnline(cmd.args['c']), "user is not online!");
   if (cmd.op == "buy_ticket" || cmd.op == "query_order" || cmd.op == "refund_ticket")
-    Assert(user_system.IsOnline(cmd.args['u']), "user is not online");
+    Assert(user_system.IsOnline(cmd.args['u']), "user is not online!");
 }
 bool TrainTicketSystem::CheckFirst() { return user_system.CheckFirst(); }
 void TrainTicketSystem::PrintTrip(const Trip& trip, const string& depart_station, const string& arrive_station) {
@@ -65,25 +65,25 @@ void TrainTicketSystem::Work() {
         const string& mail_addr = now_cmd.args['m'];
         const int privilege = ToInt(now_cmd.args['g']);
         user_system.AddUser(username, name, password, mail_addr, privilege);
-        cout << '0' << endl;
+        cout << "Add user successfully!" << endl;
       }
       if (now_cmd.op == "login") {
         const string& username = now_cmd.args['u'];
         const string& password = now_cmd.args['p'];
         user_system.Login(username, password);
-        cout << '0' << endl;
+        cout << "Login Successfully! Welcome, " << username << endl;
       }
       if (now_cmd.op == "logout") {
         const string& username = now_cmd.args['u'];
         user_system.Logout(username);
-        cout << '0' << endl;
+        cout << "Logout Successfully! Have a nice trip." << endl;
       }
       if (now_cmd.op == "query_profile") {
         User user = user_system.QueryProfile(now_cmd.args['u']);
         User cur_user = user_system.QueryProfile(now_cmd.args['c']);
         Assert(cur_user.privilege > user.privilege || cur_user.username == user.username,
                "query_profile fail: privilege not enough");
-        cout << user << endl;
+        cout << "User profile: " << user << endl;
       }
       if (now_cmd.op == "modify_profile") {
         User ori_user = user_system.QueryProfile(now_cmd.args['u']);
@@ -114,18 +114,18 @@ void TrainTicketSystem::Work() {
         const char type = now_cmd.args['y'][0];
         train_system.AddTrain(train_id, station_num, station_list, seat_num, price_list, start_time, travel_time_list,
                               stopover_time_list, sale_date, type);
-        cout << '0' << endl;
+        cout << "add train "<<train_id << " successfully!" << endl;
       }
       if (now_cmd.op == "delete_train") {
         const string& train_id = now_cmd.args['i'];
         train_system.DeleteTrain(train_id);
-        cout << '0' << endl;
+        cout << "Train : " << train_id << " deleted successfully." << endl;
       }
       if (now_cmd.op == "release_train") {
         const string& train_id = now_cmd.args['i'];
         Train train = train_system.ReleaseTrain(train_id);
         ticket_system.ReleaseSeats(train_id, train.seat_num, train.sale_duration);
-        cout << '0' << endl;
+        cout << "Train : " << train_id << " released successfully." << endl;
       }
       if (now_cmd.op == "query_train") {
         const string& train_id = now_cmd.args['i'];
@@ -177,7 +177,7 @@ void TrainTicketSystem::Work() {
         if (now_cmd.args.count('p') && now_cmd.args['p'] == "cost") sort_by_time = false;
         auto transfer_trip = train_system.QueryTransfer(depart_station, arrive_station, date, sort_by_time);
         if (!transfer_trip.transfer_station.Length()) {
-          cout << '0' << endl;
+          cout << "no transfer trip can meet your requirment." << endl;
           continue;
         }
         PrintTrip(transfer_trip.trips[0], depart_station, transfer_trip.transfer_station);
@@ -192,10 +192,10 @@ void TrainTicketSystem::Work() {
         const string& dep_station = now_cmd.args['f'];
         const string& arr_station = now_cmd.args['t'];
         int dep_idx = train.FindStation(dep_station);
-        Assert(dep_idx != Train::NIDX, "buy_ticket fail: dep_station not in train");
+        Assert(dep_idx != Train::NIDX, "buy_ticket fail: department station not in train");
         int arr_idx = train.FindStation(arr_station);
-        Assert(arr_idx != Train::NIDX, "buy_ticket fail: arr_station not in train");
-        Assert(dep_idx < arr_idx, "buy_ticket fail: dep_station not before arr_station");
+        Assert(arr_idx != Train::NIDX, "buy_ticket fail: arriving station not in train");
+        Assert(dep_idx < arr_idx, "buy_ticket fail: department station not before arriving station");
         int buy_num = ToInt(now_cmd.args['n']);
         Assert(buy_num < train.seat_num, "buy_ticket fail: not enough seats");
         int train_idx = train.FindLeavingTrain(dep_idx, date);
@@ -208,12 +208,12 @@ void TrainTicketSystem::Work() {
         bool stat = ticket_system.BuyTicket(user_name, train_id, train_idx, dep_idx, dep_station, dep_time, arr_idx,
                                             arr_station, arr_time, price, buy_num, accept_queue, timestamp);
         if (stat)
-          cout << (long long)(price) * buy_num << endl;
+          cout << "Buy ticket Successfully! You need to pay" << (long long)(price)*buy_num << "￥" << endl;
         else {
           if (accept_queue)
-            cout << "queue" << endl;
+            cout << "Not enough seats currently. Your order is queuing now." << endl;
           else
-            cout << "-1" << endl;
+            cout << "Buy ticket fail : not enough seats currently" << endl;
         }
       }
       if (now_cmd.op == "query_order") {
@@ -224,29 +224,29 @@ void TrainTicketSystem::Work() {
         const string& username = now_cmd.args['u'];
         int idx = 1;
         if (now_cmd.args.count('n')) idx = ToInt(now_cmd.args['n']);
-        ticket_system.RefundTicket(username, idx);
-        cout << '0' << endl;
+        Order refunded_order = ticket_system.RefundTicket(username, idx);
+        cout << "Ticket refunded! Order Info : " << endl;
+        cout << refunded_order << endl;
       }
       if (now_cmd.op == "rollback") {
         int ori_timestamp = ToInt(now_cmd.args['t']);
         user_system.Rollback(ori_timestamp);
         train_system.Rollback(ori_timestamp);
         ticket_system.Rollback(ori_timestamp);
-        cout << '0' << endl;
+        cout << "Rollback successfully to timestamp [" << ori_timestamp << ']' << endl;
       }
       if (now_cmd.op == "clean") {
         user_system.Clear();
         train_system.Clear();
-        ticket_system.Clear();
+        ticket_system.Clear();  
+        cout << "Clean successfully" << endl;
       }
     } catch (const char* msg) {
-      cout << "-1" << endl;
-      cerr << '[' << timestamp << ']' << ' ';
-      cerr << msg << endl;
+      // cout << "-1" << endl;
+      cout << "\033[31m" << msg << "\033[0m" << endl;
     } catch (...) {
-      cout << "-1" << endl;
-      cerr << '[' << timestamp << ']' << ' ';
-      cerr << "unknown error" << endl;
+      // cout << "-1" << endl;
+      cout << "\033[31m" << "Unknown Error" << "\033[0m" << endl;
     }
     // cout << now_cmd.op << endl;
     // cout << "arglist:" << endl;

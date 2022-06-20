@@ -10,7 +10,7 @@ namespace sjtu {
 UserSystem::UserSystem() : users_("UserSystem_users_") {}
 void UserSystem::AddUser(const string& username, const string& name, const string& password, const string& mail_addr,
                          int privilege) {
-  Assert(users_.query(username).empty());
+  Assert(users_.query(username).empty(),"add user fail : user already exists");
   User user(username, name, password, mail_addr, privilege);
   users_.insert(username, user, timestamp_);
   return;

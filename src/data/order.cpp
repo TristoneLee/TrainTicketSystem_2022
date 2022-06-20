@@ -21,15 +21,14 @@ Order::Order(const TrainID& _train_id, int _idx, const Station& _depart_station,
 Order::Order(const Order& other) = default;
 Order& Order::operator=(const Order& other) = default;
 ostream& operator<<(ostream& os, const Order& order) {
-  os << '[';
   if (order.status == Order::kSuccess) {
-    os << "success";
+    os << "\033[32m[success]";
   } else if (order.status == Order::kPending) {
-    os << "pending";
+    os << "\033[34m[pending] ";
   } else if (order.status == Order::kRefunded) {
-    os << "refunded";
+    os << "\033[33m[refunded] ";
   }
-  os << "] ";
+  os << "\033[0m ";
   os << order.train_id << ' ';
   os << order.depart_station << ' ';
   os << order.depart_time << ' ';
