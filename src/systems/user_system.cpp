@@ -16,8 +16,8 @@ void UserSystem::AddUser(const string& username, const string& name, const strin
   return;
 }
 void UserSystem::Login(const string& username, const string& password) {
-  Assert(string(QueryProfile(username).password) == password, "login fail: wrong password");
   Assert(!IsOnline(username), "login fail: already online");
+  Assert(string(QueryProfile(username).password) == password, "login fail: wrong password");
   online_status_[username] = true;
   return;
 }
@@ -32,17 +32,15 @@ User UserSystem::QueryProfile(const string& username) {
   return find_ret[0];
 }
 void UserSystem::ModifyProfile(const User& ori_val, const User& new_val) {
-  users_.erase(ori_val.username, ori_val);
-  users_.insert(new_val.username, new_val);
+  auto user_iter = users_.find(ori_val.username);
+  users_.valueUpdate(user_iter, new_val);
 }
 bool UserSystem::IsOnline(const string& username) { return online_status_.count(username); }
-bool UserSystem::CheckFirst() {
-  return users_.size() == 0;
-}
+bool UserSystem::CheckFirst() { return users_.size() == 0; }
 void UserSystem::Clear() {
-      online_status_.clear();
-      users_.clear();
+  online_status_.clear();
+  users_.clear();
 }
 UserSystem::~UserSystem() = default;
-  }     // namespace sjtu
+}  // namespace sjtu
 #endif  // TRAINTICKETSYSTEM_2022_SRC_SYSTEMS_USER_SYSTEM_CPP

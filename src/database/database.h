@@ -180,13 +180,13 @@ namespace sjtu {
         };
 
     private:
-        static const int DEGREE = 20;
+        static const int DEGREE = 100;
         static const int MIN_KEY = DEGREE - 1;
         static const int MAX_KEY = 2 * DEGREE - 1;
         static const int MIN_CHILD = DEGREE;
         static const int MAX_CHILD = 2 * DEGREE;
-        static const int MAX_DATA = 20;
-        static const int MIN_DATA = 10;
+        static const int MAX_DATA = DEGREE;
+        static const int MIN_DATA = MAX_DATA / 2;
 
         class bpNode {
             friend class bpTree;
@@ -264,7 +264,7 @@ namespace sjtu {
         };
 
         class Cache {
-            static const int cacheSize = 50;
+            static const int cacheSize = 4000 / DEGREE;
 
             friend class bpTree;
 
@@ -300,9 +300,7 @@ namespace sjtu {
                 return -1;
             }
 
-            bpNode findNode(int x) {
-                return pool[x];
-            }
+            bpNode findNode(int x) { return pool[x]; }
         };
 
         bpNode root;
@@ -525,7 +523,7 @@ namespace sjtu {
         arrayDocument.read(curArray, curNode.children[posInNode]);
         int posInArray = binarySearch(curArray.data, 0, curArray.arraySiz, obj);
         if (curArray.data[posInArray] != obj) return false;
-        if (time > 0)rollback.push(time, 2, curArray.data[posInArray].pos);
+        if (time > 0) rollback.push(time, 2, curArray.data[posInArray].pos);
         for (int i = posInArray; i <= curArray.arraySiz - 2; ++i) curArray.data[i] = curArray.data[i + 1];
         if (posInArray == 0 && posInNode != 0) curNode.indexes[posInNode - 1] = curArray.data[0];
         else if (posInNode == 0 && posInArray == 0)indexUpdate(curNode, curArray.data[0]);
@@ -983,12 +981,10 @@ namespace sjtu {
             arrayDocument.read(curArray, curArray.next);
             ++posInNode;
             posInArray = binarySearch(curArray.data, 0, curArray.arraySiz, key);
-            if (keyCompare(curArray.data[posInArray].key, key) || keyCompare(key, curArray.data[posInArray].key))
-                return iterator(0, 0, -1, 0, this);
+            if(keyCompare(curArray.data[posInArray].key,key)||keyCompare(key,curArray.data[posInArray].key)) return iterator(0,0,-1,0,this);
             else return iterator(curArray.next, tmp, posInArray, curArray.arraySiz, this);
         }
-        if (keyCompare(curArray.data[posInArray].key, key) || keyCompare(key, curArray.data[posInArray].key))
-            return iterator(0, 0, -1, 0, this);
+        if(keyCompare(curArray.data[posInArray].key,key)||keyCompare(key,curArray.data[posInArray].key)) return iterator(0,0,-1,0,this);
         else return iterator(curArray.next, curNode.children[posInNode], posInArray, curArray.arraySiz, this);
     }
 
@@ -1029,8 +1025,8 @@ namespace sjtu {
     void bpTree<Key, Value, HashType, HashFunc, KeyCompare, HashCompare>::roll(int spTime) {
         rollback.logFile.open(rollback.name + "Logfile.dat");
         rollback.modStack.open(rollback.name + "ModStack.dat");
-        while (true) {
-            rollback.logFile.seekp(4 + (rollback.logSiz - 1) * sizeof(Log));
+        while (rollback.logSiz) {
+            rollback.logFile.seekp(4 + (rollback.logSiz-1) * sizeof(Log));
             Log curLog;
             rollback.logFile.read(reinterpret_cast<char *>(&curLog), sizeof(Log));
             if (curLog.time <= spTime) break;
@@ -1072,9 +1068,14 @@ namespace sjtu {
             return valuePos;
         }
         bpNode curNode = root;
-        while (!curNode.isLeaf) {
-            int posInNode = keySearch(curNode.indexes, 0, curNode.nodeSiz, obj);
-            nodeDocument.read(curNode, curNode.children[posInNode]);
+        int des = cache.ifIn(obj);
+        if (des >= 0) {
+            curNode = cache.findNode(des);
+        } else {
+            while (!curNode.isLeaf) {
+                int posInNode = keySearch(curNode.indexes, 0, curNode.nodeSiz, obj);
+                nodeDocument.read(curNode, curNode.children[posInNode]);
+            }
         }
         int posInNode = keySearch(curNode.indexes, 0, curNode.nodeSiz, obj);
         array curArray;
@@ -1088,8 +1089,13 @@ namespace sjtu {
         curArray.data[posInArray] = obj;
         ++curArray.arraySiz;
         arrayDocument.update(curArray, curNode.children[posInNode]);
-        if (curNode.loc != root.loc) nodeDocument.update(curNode, curNode.loc);
-        else root = curNode;
+        if (des >= 0) { cache.pool[des] = curNode; }
+        else {
+            if (curNode.loc != root.loc) {
+                nodeDocument.update(curNode, curNode.loc);
+                cache.push(curNode);
+            } else root = curNode;
+        }
         ++siz;
         if (curArray.arraySiz == MAX_DATA) arraySplit(curNode, curArray, posInNode);
         return pos;
@@ -1101,9 +1107,14 @@ namespace sjtu {
         indexPair obj(key, valueHash, 0);
         if (siz == 0) return false;
         bpNode curNode = root;
-        while (!curNode.isLeaf) {
-            int posInNode = keySearch(curNode.indexes, 0, curNode.nodeSiz, obj);
-            nodeDocument.read(curNode, curNode.children[posInNode]);
+        int des = cache.ifIn(obj);
+        if (des >= 0) {
+            curNode = cache.findNode(des);
+        } else {
+            while (!curNode.isLeaf) {
+                int posInNode = keySearch(curNode.indexes, 0, curNode.nodeSiz, obj);
+                nodeDocument.read(curNode, curNode.children[posInNode]);
+            }
         }
         int posInNode = keySearch(curNode.indexes, 0, curNode.nodeSiz, obj);
         array curArray;
@@ -1115,8 +1126,13 @@ namespace sjtu {
         else if (posInNode == 0 && posInArray == 0)indexUpdate(curNode, curArray.data[0]);
         --curArray.arraySiz;
         arrayDocument.update(curArray, curNode.children[posInNode]);
-        if (curNode.loc != root.loc) nodeDocument.update(curNode, curNode.loc);
-        else root = curNode;
+     if (des >= 0) { cache.pool[des] = curNode; }
+        else {
+            if (curNode.loc != root.loc) {
+                nodeDocument.update(curNode, curNode.loc);
+                cache.push(curNode);
+            } else root = curNode;
+        }
         --siz;
         if (curArray.arraySiz < MIN_DATA) arrayAdoption(curNode, curArray, posInNode);
         return true;

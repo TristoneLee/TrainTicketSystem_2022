@@ -2,8 +2,14 @@ cmake_minimum_required(VERSION 3.10.2)
 project(TrainTicketSystem)
 set(CMAKE_CXX_STANDARD 17)
 # ------------------the following is to be modified------------------
-set(lib_dir_names tools stl data FileSystem systems database)
-set(program_names code  test test_bptree)
+set(ROLLBACK FALSE)
+if (ROLLBACK)
+  set(sys_dir systems_roll)
+else()
+  set(sys_dir systems)
+endif()
+set(lib_dir_names tools stl data FileSystem ${sys_dir} database)
+set(program_names code)
 
 # -------------------------------------------------------------------
 
