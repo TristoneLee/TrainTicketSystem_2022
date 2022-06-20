@@ -264,7 +264,7 @@ namespace sjtu {
         };
 
         class Cache {
-            static const int cacheSize = 4000 / DEGREE;
+            static const int cacheSize = 0;
 
             friend class bpTree;
 
