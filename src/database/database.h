@@ -300,7 +300,9 @@ namespace sjtu {
                 return -1;
             }
 
-            bpNode findNode(int x) { return pool[x]; }
+            bpNode findNode(int x) {
+                return pool[x];
+            }
         };
 
         bpNode root;
@@ -981,10 +983,12 @@ namespace sjtu {
             arrayDocument.read(curArray, curArray.next);
             ++posInNode;
             posInArray = binarySearch(curArray.data, 0, curArray.arraySiz, key);
-            if(compare(curArray.data[posInArray].key,key)||compare(key,curArray.data[posInArray].key)) return iterator(0,0,-1,0,this);
+            if (keyCompare(curArray.data[posInArray].key, key) || keyCompare(key, curArray.data[posInArray].key))
+                return iterator(0, 0, -1, 0, this);
             else return iterator(curArray.next, tmp, posInArray, curArray.arraySiz, this);
         }
-        if(compare(curArray.data[posInArray].key,key)||compare(key,curArray.data[posInArray].key)) return iterator(0,0,-1,0,this);
+        if (keyCompare(curArray.data[posInArray].key, key) || keyCompare(key, curArray.data[posInArray].key))
+            return iterator(0, 0, -1, 0, this);
         else return iterator(curArray.next, curNode.children[posInNode], posInArray, curArray.arraySiz, this);
     }
 
